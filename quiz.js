@@ -693,6 +693,7 @@ function showReward(sectionId) {
   feedbackScreen.hidden = true;
   resultsScreen.hidden = true;
   rewardScreen.hidden = false;
+  document.querySelector("#walletPill").hidden = true;
   document.querySelector("#rewardSection").textContent = section.name;
   document.querySelector("#rewardXp").textContent = `+${section.xp} Green Points 🌱`;
   document.querySelector("#rewardWalletBalance").textContent = walletPoints;
@@ -706,6 +707,7 @@ function showReward(sectionId) {
 
 function continueFromReward() {
   rewardScreen.hidden = true;
+  document.querySelector("#walletPill").hidden = false;
   const nextIndex = findNextVisibleIndex(currentIndex);
   if (nextIndex === -1) {
     showResults();

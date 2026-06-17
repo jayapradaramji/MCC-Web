@@ -41,14 +41,20 @@ a {
 }
 
 .app-shell {
-  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .hero {
   position: relative;
-  min-height: 76vh;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
   color: white;
+  display: flex;
+  flex-direction: column;
 }
 
 .hero-image,
@@ -80,7 +86,7 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 24px clamp(20px, 5vw, 72px);
+  padding: 16px clamp(20px, 5vw, 72px);
 }
 
 .brand-mark {
@@ -110,8 +116,8 @@ a {
 
 .hero-copy {
   width: min(680px, calc(100% - 40px));
-  margin: clamp(42px, 8vh, 86px) 0 0 clamp(20px, 5vw, 72px);
-  padding-bottom: 62px;
+  margin: clamp(10px, 2vh, 30px) 0 0 clamp(20px, 5vw, 72px);
+  padding-bottom: 20px;
 }
 
 .eyebrow,
@@ -125,10 +131,10 @@ a {
 }
 
 .hero-copy h1 {
-  margin: 12px 0 18px;
+  margin: 10px 0 12px;
   max-width: 650px;
-  font-size: clamp(2.7rem, 6.4vw, 5rem);
-  line-height: 0.96;
+  font-size: clamp(2.2rem, min(4.5vw, 7vh), 4rem);
+  line-height: 1;
   letter-spacing: 0;
 }
 
@@ -145,7 +151,7 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 20px;
+  margin-top: 16px;
 }
 
 .primary-button,
@@ -202,15 +208,16 @@ a {
   width: min(1120px, calc(100% - 32px));
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin: 44px auto 72px;
+  gap: 12px;
+  margin: 12px auto;
+  flex-shrink: 0;
 }
 
 .landing-feature-band article {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: white;
-  padding: 24px;
+  padding: 16px;
   box-shadow: 0 12px 32px rgba(34, 48, 37, 0.08);
 }
 
@@ -226,16 +233,17 @@ a {
 }
 
 .landing-feature-band h2 {
-  margin-top: 18px;
-  font-size: 1.4rem;
+  margin-top: 14px;
+  font-size: 1.25rem;
 }
 
 .landing-feature-band p {
   color: var(--muted);
-  line-height: 1.55;
+  line-height: 1.45;
+  margin-top: 8px;
 }
 
-.score-strip > div {
+.score-strip>div {
   min-height: 108px;
   padding: 20px;
   background: var(--panel);
