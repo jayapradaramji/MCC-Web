@@ -43,9 +43,9 @@
             <div class="wallet-hero-art" aria-hidden="true">
               <div class="wallet-graphic">
                 <span class="wallet-slot"></span>
-                <span class="coin coin-one">₹</span>
-                <span class="coin coin-two">₹</span>
-                <span class="coin coin-three">₹</span>
+                <span class="coin coin-one">🌳</span>
+                <span class="coin coin-two">🌳</span>
+                <span class="coin coin-three">🌳</span>
                 <span class="leaf-card"></span>
               </div>
               <div class="tree-growth">
@@ -72,11 +72,11 @@
               <strong>🌱 XP Points</strong>
               <span>Earn after every section</span>
             </div>
-            <div class="mission-tile">
+            <div class="mission-tile active">
               <strong>🌍 Awareness Score</strong>
               <span>Build your carbon literacy</span>
             </div>
-            <div class="mission-tile">
+            <div class="mission-tile active">
               <strong>🏆 Badge Unlocks</strong>
               <span>Collect 9 milestone badges</span>
             </div>
@@ -135,31 +135,60 @@
     </section>
 
     <section class="reward-screen" id="rewardScreen" hidden aria-live="polite">
+      <!-- Full screen rain canvas -->
+      <canvas class="reward-rain-canvas" id="rewardRainCanvas" aria-hidden="true"></canvas>
+      
+      <!-- Piggy Bank Jar for coins -->
+      <div class="piggy-jar-container" aria-hidden="true">
+        <div class="coin-fill-overlay" id="coinFillOverlay"></div>
+        <img src="assets/piggy.png" alt="Piggy Bank" class="piggy-image-icon" />
+      </div>
+
       <div class="reward-card">
         <button class="close-card-button" id="quitFromRewardButton" type="button" aria-label="Close quiz">&times;</button>
-        <div class="reward-wallet-visual" id="rewardWalletVisual" aria-label="Green points wallet animation">
-          <div class="wallet-box">
-            <span class="wallet-lid" aria-hidden="true"></span>
-            <span class="wallet-leaves" aria-hidden="true"></span>
-            <span class="wallet-coin" aria-hidden="true">₹</span>
-            <strong id="rewardWalletBalance">0</strong>
-            <small>Green Points</small>
-          </div>
-        </div>
         <p class="section-kicker" id="rewardSection">Section Completed</p>
         <h1>Section Completed!</h1>
-        <div class="reward-points">
-          <span id="rewardXp">+50 Green Points</span>
-          <small>Sustainability XP Points</small>
-        </div>
-        <div class="reward-stack">
-          <div>
-            <strong id="rewardAwareness">Carbon Awareness Score +10</strong>
-            <span>Each answer sharpens your carbon profile.</span>
+        <div class="reward-metrics-grid">
+          <!-- Green Points Tile -->
+          <div class="flip-card">
+            <div class="flip-card-inner">
+              <div class="flip-card-front reward-tile">
+                <span class="front-label">Green Points</span>
+                <span class="tile-icon large">🌱</span>
+              </div>
+              <div class="flip-card-back reward-tile">
+                <span id="rewardXpBack">50</span>
+                <small>Points earned</small>
+              </div>
+            </div>
           </div>
-          <div>
-            <strong id="rewardBadge">Eco Explorer Badge Unlocked</strong>
-            <span>Badge added to your quiz journey.</span>
+          
+          <!-- Awareness Score Tile -->
+          <div class="flip-card">
+            <div class="flip-card-inner">
+              <div class="flip-card-front reward-tile">
+                <span class="front-label">Awareness Score</span>
+                <span class="tile-icon large">🌍</span>
+              </div>
+              <div class="flip-card-back reward-tile">
+                <span id="rewardAwarenessBack">10</span>
+                <small>Profile sharpened</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Badge Tile -->
+          <div class="flip-card">
+            <div class="flip-card-inner">
+              <div class="flip-card-front reward-tile">
+                <span class="front-label">Current Tier</span>
+                <span class="tile-icon large">🏅</span>
+              </div>
+              <div class="flip-card-back reward-tile">
+                <span id="rewardBadgeBack" style="font-size: clamp(1rem, 2.2vw, 1.3rem);">Brass Tier</span>
+                <span class="tile-icon large" id="rewardBadgeIcon">🏅</span>
+              </div>
+            </div>
           </div>
         </div>
         <div class="reward-actions">
@@ -262,8 +291,8 @@
       </div>
 
       <div class="result-actions">
-        <button class="nav-button back-button" id="restartButton" type="button">Restart quiz</button>
         <a class="nav-button back-button" href="index.html">Home page</a>
+        <button class="nav-button back-button" id="restartButton" type="button">Restart quiz</button>
         <button class="nav-button next-button" id="downloadButton" type="button">Download score</button>
       </div>
     </section>
@@ -272,6 +301,7 @@
   <script src="config.js"></script>
   <script src="api.js"></script>
   <script src="quiz.js"></script>
+  <script src="leaf-rain.js"></script>
 </body>
 
 </html>

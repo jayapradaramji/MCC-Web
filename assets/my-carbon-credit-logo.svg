@@ -1,8 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 335" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-90 0 500 335" role="img" aria-labelledby="title desc">
   <title id="title">My Carbon Credit logo</title>
   <desc id="desc">Eco globe with circular arrows, leaves, homes, and the My Carbon Credit name.</desc>
   <defs>
     <linearGradient id="ecoGradient" x1="58" y1="250" x2="255" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1da8c3" />
+      <stop offset="0.45" stop-color="#48b36f" />
+      <stop offset="1" stop-color="#9bcf4d" />
+    </linearGradient>
+    <linearGradient id="textGradient" x1="20" y1="0" x2="300" y2="0" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#1da8c3" />
       <stop offset="0.45" stop-color="#48b36f" />
       <stop offset="1" stop-color="#9bcf4d" />
@@ -26,6 +31,7 @@
     <path d="M84 220l36-29 21 17 41-38 9 10-50 47-22-18-26 22z" />
     <path d="M73 124c7 3 12 8 15 16 3 7 4 15 1 22-15-4-24-14-27-29 4-5 7-8 11-9z" opacity=".7" />
   </g>
-  <text x="160" y="282" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="900" fill="#4aa96f">My Carbon Credit</text>
-  <text x="160" y="310" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="900" letter-spacing="2.5" fill="#3998ac">ENVIRONMENTAL DATA SOLUTIONS</text>
+  <text x="160" y="286" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="url(#textGradient)">My Carbon Credit</text>
+  <text x="160" y="312" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" letter-spacing="3.5" fill="#659ba5">ENVIRONMENTAL</text>
+  <text x="160" y="328" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" letter-spacing="3.5" fill="#659ba5">DATA SOLUTIONS</text>
 </svg>

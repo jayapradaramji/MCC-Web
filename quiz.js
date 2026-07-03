@@ -678,15 +678,25 @@ function goBack() {
   renderQuestion();
 }
 
+function getBadgeInfo(points) {
+  if (points < 50) return { name: "Aluminium", icon: "🏅" };
+  if (points < 100) return { name: "Brass", icon: "🏅" };
+  if (points < 200) return { name: "Bronze", icon: "🥉" };
+  if (points < 400) return { name: "Silver", icon: "🥈" };
+  if (points < 700) return { name: "Gold", icon: "🥇" };
+  return { name: "Platinum", icon: "🏆" };
+}
+
 function showReward(sectionId) {
   const section = sectionFor(sectionId);
   rewardSectionId = sectionId;
-  const rewardWalletVisual = document.querySelector("#rewardWalletVisual");
+  
   if (!awardedSections.has(sectionId)) {
     awardedSections.add(sectionId);
     walletPoints += section.xp;
     updateWallet(true);
   }
+  
   quizStage.hidden = true;
   landingScreen.hidden = true;
   loginScreen.hidden = true;
@@ -695,14 +705,16 @@ function showReward(sectionId) {
   rewardScreen.hidden = false;
   document.querySelector("#walletPill").hidden = true;
   document.querySelector("#rewardSection").textContent = section.name;
-  document.querySelector("#rewardXp").textContent = `+${section.xp} Green Points 🌱`;
-  document.querySelector("#rewardWalletBalance").textContent = walletPoints;
-  document.querySelector("#rewardAwareness").textContent = `Carbon Awareness Score +${section.awareness} 🌍`;
-  document.querySelector("#rewardBadge").textContent = `🏅 ${section.badge}`;
+  
+  // Populate metric flip cards (only on back)
+  document.querySelector("#rewardXpBack").textContent = `+${section.xp} Points`;
+  document.querySelector("#rewardAwarenessBack").textContent = `+${section.awareness} Points`;
+  
+  const badge = getBadgeInfo(walletPoints);
+  document.querySelector("#rewardBadgeBack").textContent = badge.name;
+  document.querySelector("#rewardBadgeIcon").textContent = badge.icon;
+  
   continueButton.textContent = findNextVisibleIndex(currentIndex) === -1 ? "See my score →" : "Continue →";
-  rewardWalletVisual.classList.remove("collecting");
-  void rewardWalletVisual.offsetWidth;
-  rewardWalletVisual.classList.add("collecting");
 }
 
 function continueFromReward() {
