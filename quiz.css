@@ -302,12 +302,12 @@ textarea {
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  border: 2px solid #f7d46b;
-  background: radial-gradient(circle at 35% 28%, #fff5a8, #e2ab2e 62%, #a86e12);
-  color: #356b32;
+  border: 2.5px solid #4a9c5e;
+  background: radial-gradient(circle at 35% 28%, #8fd46a, #3a8c2e 50%, #1b5e20 90%);
+  color: #d4edda;
   font-size: 1.2rem;
   font-weight: 900;
-  box-shadow: 0 10px 22px rgba(168, 110, 18, 0.26);
+  box-shadow: 0 10px 22px rgba(27, 94, 32, 0.26);
   animation: coinRise 2.6s ease-in-out infinite;
 }
 
@@ -751,6 +751,7 @@ input[type="range"] {
   gap: 10px;
   padding: 0 clamp(16px, 2vw, 26px);
   font-size: clamp(0.95rem, 1.8vh, 1.08rem);
+  text-decoration: none;
 }
 
 .next-button {
@@ -779,38 +780,112 @@ input[type="range"] {
 
 .reward-card {
   position: relative;
+  z-index: 6;
   display: grid;
   justify-items: center;
   gap: clamp(8px, 1.5vh, 14px);
   border: 1px solid var(--line);
   border-radius: 28px;
   background: white;
-  padding: clamp(14px, 3vh, 32px);
-  padding-top: clamp(64px, 10vh, 112px);
+  padding: clamp(24px, 4vh, 40px);
   text-align: center;
   box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.reward-card .section-kicker {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 900;
+  margin: 0;
+  color: var(--leaf-strong);
 }
 
 .reward-card h1 {
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
+  font-weight: 700;
+  color: var(--ink);
   margin: 0;
 }
 
-.reward-wallet-visual {
+.reward-screen {
+  position: relative;
+}
+
+.reward-rain-canvas {
   position: absolute;
-  top: clamp(8px, 1vh, 14px);
-  right: clamp(48px, 6vw, 68px);
-  width: 176px;
-  height: 118px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-  transform: scale(clamp(0.6, 8.5vh, 1));
-  transform-origin: top right;
+  z-index: 10;
+}
+
+.piggy-jar-container {
+  position: absolute;
+  bottom: clamp(-20px, -2vh, -10px);
+  left: 50%;
+  transform: translateX(-50%);
+  transform-origin: bottom center;
+  width: clamp(210px, 38vw, 320px);
+  height: clamp(165px, 30vw, 240px);
+  z-index: 2;
+  pointer-events: none;
+  animation: floatPiggy 3.5s ease-in-out infinite;
+}
+
+.piggy-image-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  position: relative;
+  z-index: 2;
+}
+
+.coin-fill-overlay {
+  position: absolute;
+  bottom: 12%;
+  left: 15%;
+  right: 15%;
+  height: 0%;
+  background: linear-gradient(
+    to top,
+    rgba(58, 140, 46, 0.55) 0%,
+    rgba(110, 201, 88, 0.45) 40%,
+    rgba(143, 212, 106, 0.30) 70%,
+    rgba(165, 216, 115, 0.10) 100%
+  );
+  border-radius: 40% 40% 45% 45%;
+  z-index: 1;
+  transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+
+
+.piggy-jar-container.piggy-bounce {
+  animation: piggyBounce 0.3s ease-out;
+}
+
+@keyframes piggyBounce {
+  0% { transform: translateX(-50%) scale(1); }
+  40% { transform: translateX(-50%) scale(1.04) translateY(-3px); }
+  70% { transform: translateX(-50%) scale(0.98) translateY(1px); }
+  100% { transform: translateX(-50%) scale(1) translateY(0); }
+}
+
+@keyframes floatPiggy {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-8px); }
+}
+
+.reward-card > *:not(.close-card-button) {
+  position: relative;
+  z-index: 1;
 }
 
 .close-card-button {
   position: absolute;
-  top: 14px;
-  right: 16px;
+  top: 8px;
+  right: 8px;
   width: 32px;
   height: 32px;
   display: grid;
@@ -834,149 +909,102 @@ input[type="range"] {
   border-color: var(--muted);
 }
 
-.wallet-box {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 142px;
-  min-height: 92px;
-  display: grid;
-  justify-items: end;
-  align-content: center;
-  gap: 0;
-  padding: 18px 20px 10px 48px;
-  border: 2px solid rgba(27, 94, 48, 0.42);
-  border-radius: 18px 24px 24px 18px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0 22%, transparent 22%),
-    linear-gradient(180deg, #34984b, #195f32);
-  box-shadow: 0 16px 34px rgba(27, 94, 48, 0.22);
-  overflow: hidden;
-}
-
-.wallet-lid {
-  position: absolute;
-  left: 18px;
-  right: 54px;
-  top: 15px;
-  height: 16px;
-  border-radius: 999px 999px 0 0;
-  background: #164f2c;
-  opacity: 1;
-}
-
-.wallet-leaves {
-  position: absolute;
-  left: 20px;
-  bottom: 8px;
-  width: 28px;
-  height: 46px;
-  border-radius: 100% 0 100% 0;
-  background: linear-gradient(135deg, #b7df78, #4b9b46);
-  transform: rotate(-22deg);
-  opacity: 0.85;
-}
-
-.wallet-leaves::before,
-.wallet-leaves::after {
-  content: "";
-  position: absolute;
-  width: 22px;
-  height: 34px;
-  border-radius: 100% 0 100% 0;
-  background: inherit;
-}
-
-.wallet-leaves::before {
-  left: -18px;
-  top: 10px;
-  transform: rotate(-36deg);
-}
-
-.wallet-leaves::after {
-  right: -12px;
-  top: 16px;
-  transform: rotate(42deg);
-}
-
-.wallet-coin {
-  position: absolute;
-  left: 36px;
-  top: 4px;
-  width: 46px;
-  height: 46px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  border: 2px solid #f7d46b;
-  background: radial-gradient(circle at 35% 28%, #fff5a8, #e2ab2e 62%, #a86e12);
-  color: #2f7048;
-  font-weight: 900;
-  box-shadow: 0 10px 22px rgba(168, 110, 18, 0.26);
-  animation: coinDropIn 900ms ease-out forwards;
-}
-
-.wallet-box strong {
-  color: #fff9da;
-  font-size: 1.7rem;
-  line-height: 1;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
-}
-
-.wallet-box small {
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 0.62rem;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.reward-wallet-visual.collecting .wallet-box {
-  animation: walletCatch 900ms ease 1020ms;
-}
-
-.reward-points {
-  width: min(380px, 100%);
-  display: grid;
-  gap: 2px;
-  border-radius: 24px;
-  background: #eef7ef;
-  color: var(--leaf-strong);
-  padding: clamp(8px, 1.5vh, 14px) clamp(10px, 2vw, 18px);
-}
-
-.reward-points span {
-  font-size: clamp(1.3rem, min(3.5vw, 4.5vh), 2.2rem);
-  font-weight: 900;
-}
-
-.reward-points small {
-  color: var(--muted);
-  font-weight: 900;
-}
-
-.reward-stack {
+.reward-metrics-grid {
   width: min(680px, 100%);
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(6px, 1vh, 10px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(8px, 1vh, 12px);
+  perspective: 1000px;
 }
 
-.reward-stack div {
-  display: grid;
-  gap: clamp(2px, 0.5vh, 4px);
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: clamp(8px, 1.2vh, 12px);
+.flip-card {
+  background-color: transparent;
+  width: 100%;
+  height: clamp(80px, 14vh, 110px);
+  perspective: 1000px;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.flip-card:hover .flip-card-inner,
+.flip-card:focus-within .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front, .flip-card-back {
+  position: absolute;
+  inset: 0;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  border-radius: 20px;
+  padding: 8px;
+  border: 1px solid rgba(27, 94, 48, 0.15);
+}
+
+.flip-card-front {
+  background: #eef7ef;
+  color: var(--leaf-strong);
+  justify-content: space-between;
+  padding: 14px 8px 10px;
+}
+
+.flip-card-back {
   background: #fffef9;
+  color: var(--leaf-strong);
+  transform: rotateY(180deg);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: inset 0 4px 10px rgba(0,0,0,0.02);
 }
 
-.reward-stack strong {
-  font-size: clamp(0.85rem, 1.8vh, 1rem);
+.reward-tile span {
+  font-size: clamp(1.1rem, 2.8vw, 1.6rem);
+  font-weight: 900;
+  line-height: 1.1;
 }
 
-.reward-stack span {
+.reward-tile .front-label {
+  font-size: clamp(0.9rem, 2.2vw, 1.2rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+  text-align: center;
+  margin-bottom: 0;
+}
+
+.reward-tile small {
   color: var(--muted);
-  font-size: clamp(0.78rem, 1.5vh, 0.9rem);
+  font-weight: 900;
+  font-size: clamp(0.6rem, 1vw, 0.75rem);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.tile-icon {
+  font-size: 1.1em;
+  font-style: normal;
+  display: inline-block;
+}
+
+.tile-icon.large {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  margin-top: 6px;
 }
 
 .login-card {
@@ -1350,21 +1378,28 @@ input[type="range"] {
   }
 }
 
+.result-hero h1 {
+  font-size: clamp(1.8rem, min(4vw, 5vh), 2.8rem);
+  margin: 0 0 clamp(4px, 1vh, 8px);
+}
+
 .score-orbit {
-  width: clamp(140px, 24vh, 220px);
-  height: clamp(140px, 24vh, 220px);
-  display: grid;
-  place-items: center;
-  margin: clamp(12px, 2vh, 32px) auto clamp(8px, 1.5vh, 16px);
+  width: clamp(140px, 22vh, 190px);
+  height: clamp(140px, 22vh, 190px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: clamp(10px, 1.5vh, 24px) auto clamp(6px, 1vh, 12px);
   border-radius: 50%;
   background:
-    radial-gradient(circle at center, var(--paper) 0 57%, transparent 58%),
+    radial-gradient(circle at center, var(--paper) 0 62%, transparent 63%),
     conic-gradient(var(--leaf-strong) var(--score-angle), var(--track) 0);
 }
 
 .score-orbit span {
   display: block;
-  font-size: clamp(2.5rem, 6vh, 4rem);
+  font-size: clamp(2.2rem, 5vh, 3.2rem);
   font-weight: 900;
   line-height: 1;
 }
@@ -1374,26 +1409,27 @@ input[type="range"] {
   color: var(--muted);
   line-height: 1.2;
   font-size: clamp(0.75rem, 1.5vh, 0.88rem);
+  margin-top: 4px;
 }
 
 .result-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(10px, 2vh, 20px);
-  margin-top: clamp(14px, 2.5vh, 34px);
+  gap: clamp(10px, 1.5vh, 16px);
+  margin-top: clamp(10px, 1.8vh, 24px);
 }
 
 .result-grid article {
   border: 1px solid var(--line);
   border-radius: 18px;
   background: white;
-  padding: clamp(12px, 2vh, 26px);
+  padding: clamp(10px, 1.5vh, 20px);
   box-shadow: var(--shadow);
 }
 
 .result-grid h2 {
-  margin: 0 0 clamp(8px, 1.5vh, 20px);
-  font-size: clamp(1.2rem, min(2vw, 2.5vh), 1.5rem);
+  margin: 0 0 clamp(6px, 1vh, 14px);
+  font-size: clamp(1.1rem, min(1.8vw, 2vh), 1.35rem);
 }
 
 .breakdown-item {

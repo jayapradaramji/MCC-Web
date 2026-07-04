@@ -457,6 +457,52 @@ const colors = {
 
 let currentIndex = 0;
 let rewardSectionId = null;
+let responseId = generateResponseId();
+
+function generateResponseId() {
+  const now = new Date();
+  const pad = (n, len) => String(n).padStart(len, "0");
+  const rand = Math.floor(Math.random() * 10000);
+  return "MCC-" + now.getFullYear() + pad(now.getMonth() + 1, 2) + pad(now.getDate(), 2) + "-" + pad(now.getHours(), 2) + pad(now.getMinutes(), 2) + pad(now.getSeconds(), 2) + "-" + pad(rand, 4);
+}
+
+const sectionColumnMap = {
+  profile: { lifestyle: "Lifestyle", location: "Location", household: "Household", pets: "Pets" },
+  mobility: { transport: "Transport", distance: "Commute_Distance_km", travelDays: "Travel_Days", fuel: "Fuel", metroAccess: "Metro_Access", longTravel: "Long_Distance_Travel", flights: "Flights_Per_Year" },
+  home: { acHours: "AC_Hours", appliances: "Appliances", deviceUsage: "Device_Usage", cooking: "Cooking_Source", homeTech: "Home_Tech" },
+  food: { diet: "Diet", nonVegMeals: "NonVeg_Meals", dairy: "Dairy", deliveries: "Food_Delivery", reusables: "Reusable_Items" },
+  digital: { deviceCount: "Device_Count", smartDevices: "Smart_Devices", afterWorkUsage: "After_Work_Usage" },
+  behaviour: { importance: "Sustainability_Importance", challenges: "Challenges", participation: "Participation", offset: "Offset_Interest" },
+  gamification: { rewardMotivation: "Reward_Motivation", engagement: "Engagement_Style", usageFrequency: "Platform_Usage" },
+  workplace: { companyTracking: "Employee_Sustainability", workplaceParticipation: "Workplace_Participation" },
+  reflection: { biggestChallenge: "Biggest_Challenge", featureIdea: "Feature_Suggestions", sustainableLiving: "Sustainable_Living_Definition" }
+};
+
+function buildSectionPayload(sectionId) {
+  const mapping = sectionColumnMap[sectionId];
+  if (!mapping) return null;
+  const data = {};
+  for (const [questionKey, columnName] of Object.entries(mapping)) {
+    let val = getValue(questionKey, "");
+    if (Array.isArray(val)) val = val.join(", ");
+    if (questionKey === "travelDays" && Array.isArray(getValue("travelDays", []))) val = getValue("travelDays", []).length;
+    data[columnName] = val;
+  }
+  // Add city/state from location on profile section
+  if (sectionId === "profile") {
+    const loc = getValue("location", "");
+    data["City"] = loc.split(",")[0].trim();
+    data["State"] = loc.includes(",") ? loc.split(",")[1].trim() : "";
+  }
+  return {
+    Response_ID: responseId,
+    Section_ID: sectionId,
+    Is_Final: false,
+    Timestamp: new Date().toISOString(),
+    Device_Type: /Mobi|Android/i.test(navigator.userAgent) ? "Mobile" : "Desktop",
+    data: data
+  };
+}
 
 const counter = document.querySelector("#questionCounter");
 const progressBar = document.querySelector("#progressBar");
@@ -530,7 +576,9 @@ function renderQuestion() {
   sectionName.textContent = question.sectionName;
   title.textContent = question.title;
   help.textContent = question.help;
-  backButton.disabled = findPreviousVisibleIndex(currentIndex) === -1;
+  const prevIndex = findPreviousVisibleIndex(currentIndex);
+  const isFirstInSection = prevIndex === -1 || questions[prevIndex].sectionId !== question.sectionId;
+  backButton.style.visibility = isFirstInSection ? "hidden" : "visible";
   nextButton.textContent = findNextVisibleIndex(currentIndex) === -1 ? "Finish quiz →" : "Next →";
   nextButton.disabled = !hasAnswer(question);
 
@@ -678,15 +726,31 @@ function goBack() {
   renderQuestion();
 }
 
+function getBadgeInfo(points) {
+  if (points < 50) return { name: "Aluminium", icon: "🏅" };
+  if (points < 100) return { name: "Brass", icon: "🏅" };
+  if (points < 200) return { name: "Bronze", icon: "🥉" };
+  if (points < 400) return { name: "Silver", icon: "🥈" };
+  if (points < 700) return { name: "Gold", icon: "🥇" };
+  return { name: "Platinum", icon: "🏆" };
+}
+
 function showReward(sectionId) {
   const section = sectionFor(sectionId);
   rewardSectionId = sectionId;
-  const rewardWalletVisual = document.querySelector("#rewardWalletVisual");
+  
   if (!awardedSections.has(sectionId)) {
     awardedSections.add(sectionId);
     walletPoints += section.xp;
     updateWallet(true);
   }
+  
+  // Silent save after each section
+  const sectionPayload = buildSectionPayload(sectionId);
+  if (sectionPayload) {
+    saveQuizResponse(sectionPayload).catch(() => {});
+  }
+  
   quizStage.hidden = true;
   landingScreen.hidden = true;
   loginScreen.hidden = true;
@@ -695,14 +759,16 @@ function showReward(sectionId) {
   rewardScreen.hidden = false;
   document.querySelector("#walletPill").hidden = true;
   document.querySelector("#rewardSection").textContent = section.name;
-  document.querySelector("#rewardXp").textContent = `+${section.xp} Green Points 🌱`;
-  document.querySelector("#rewardWalletBalance").textContent = walletPoints;
-  document.querySelector("#rewardAwareness").textContent = `Carbon Awareness Score +${section.awareness} 🌍`;
-  document.querySelector("#rewardBadge").textContent = `🏅 ${section.badge}`;
+  
+  // Populate metric flip cards (only on back)
+  document.querySelector("#rewardXpBack").textContent = `+${section.xp} Points`;
+  document.querySelector("#rewardAwarenessBack").textContent = `+${section.awareness} Points`;
+  
+  const badge = getBadgeInfo(walletPoints);
+  document.querySelector("#rewardBadgeBack").textContent = badge.name;
+  document.querySelector("#rewardBadgeIcon").textContent = badge.icon;
+  
   continueButton.textContent = findNextVisibleIndex(currentIndex) === -1 ? "See my score →" : "Continue →";
-  rewardWalletVisual.classList.remove("collecting");
-  void rewardWalletVisual.offsetWidth;
-  rewardWalletVisual.classList.add("collecting");
 }
 
 function continueFromReward() {
@@ -758,7 +824,7 @@ function buildPayload() {
 
 Respondent_Master: {
 
-    Response_ID: "",
+    Response_ID: responseId,
 
     Timestamp: "",
 
@@ -802,6 +868,8 @@ Respondent_Master: {
     Completion_Time_sec: 0,
 
     Quiz_Completed: true,
+
+    Is_Final: true,
 
     Source: window.location.hostname
 
@@ -1168,6 +1236,7 @@ function downloadScore() {
 
 function restart() {
   currentIndex = 0;
+  responseId = generateResponseId();
   questions.forEach((question) => {
     if (question.type === "choice" || question.type === "text") question.value = "";
     if (question.type === "multi") question.value = [];
@@ -1186,6 +1255,7 @@ function restart() {
 }
 
 function startQuiz() {
+  responseId = generateResponseId();
   landingScreen.hidden = true;
   quizStage.hidden = false;
   rewardScreen.hidden = true;
