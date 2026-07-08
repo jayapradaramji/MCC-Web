@@ -37,7 +37,7 @@ function findRowByResponseId(sheet, responseId) {
 /* ════════════════════════════════════════════════════
    SECTION SAVE — partial data after each section
    ════════════════════════════════════════════════════ */
-function handleSectionSave(ss, dashboard, respondent, quiz, responseId, payload) {
+function handleSectionSave(ss, logs, respondent, quiz, responseId, payload) {
   var data = payload.data || {};
   var sectionId = payload.Section_ID || "";
   var timestamp = payload.Timestamp || new Date().toISOString();
@@ -79,13 +79,10 @@ function handleSectionSave(ss, dashboard, respondent, quiz, responseId, payload)
     if (data["State"]) respondent.getRange(respRow, 6).setValue(data["State"]);
   }
 
-  dashboard.appendRow([new Date(), "SECTION SAVE", sectionId + " saved for " + responseId]);
+  logs.appendRow([new Date(), "SECTION SAVE", sectionId + " saved for " + responseId]);
 }
 
-/* ════════════════════════════════════════════════════
-   FINAL SAVE — complete payload at quiz end
-   ════════════════════════════════════════════════════ */
-function handleFinalSave(ss, dashboard, respondent, quiz, responseId, payload) {
+function handleFinalSave(ss, logs, respondent, quiz, responseId, payload) {
   var r = payload.Respondent_Master;
   var q = payload.Quiz_Responses;
 
@@ -121,7 +118,7 @@ function handleFinalSave(ss, dashboard, respondent, quiz, responseId, payload) {
     respondent.getRange(respRow, 1, 1, respondentData.length).setValues([respondentData]);
   }
 
-  dashboard.appendRow([new Date(), "STEP 3", "Respondent Saved"]);
+  logs.appendRow([new Date(), "STEP 3", "Respondent Saved"]);
 
   /* ── Quiz_Responses: update existing row or create new ── */
   var quizData = [
@@ -171,7 +168,7 @@ function handleFinalSave(ss, dashboard, respondent, quiz, responseId, payload) {
     quiz.getRange(quizRow, 1, 1, quizData.length).setValues([quizData]);
   }
 
-  dashboard.appendRow([new Date(), "STEP 4", "Quiz Saved"]);
+  logs.appendRow([new Date(), "STEP 4", "Quiz Saved"]);
 
   /* ── Carbon_Breakdown ── */
   var carbon = ss.getSheetByName("Carbon_Breakdown");
@@ -188,7 +185,7 @@ function handleFinalSave(ss, dashboard, respondent, quiz, responseId, payload) {
     c.Annual_CO2_t
   ]);
 
-  dashboard.appendRow([new Date(), "STEP 5", "Carbon Saved"]);
+  logs.appendRow([new Date(), "STEP 5", "Carbon Saved"]);
 
   /* ── Recommendations ── */
   var recommendation = ss.getSheetByName("Recommendations");
@@ -204,27 +201,24 @@ function handleFinalSave(ss, dashboard, respondent, quiz, responseId, payload) {
     rec.Status
   ]);
 
-  dashboard.appendRow([new Date(), "STEP 6", "Recommendations Saved"]);
+  logs.appendRow([new Date(), "STEP 6", "Recommendations Saved"]);
 }
 
-/* ════════════════════════════════════════════════════
-   MAIN ENTRY POINT
-   ════════════════════════════════════════════════════ */
 function doPost(e) {
 
   var ss = SpreadsheetApp.openById("1RiREbKcfNxnehPmTtZX1n-0w7wCC7uFizgtDdVcTDQE");
 
-  var dashboard   = ss.getSheetByName("Dashboard_Data");
+  var logs        = ss.getSheetByName("API_Logs");
   var respondent  = ss.getSheetByName("Respondent_Master");
   var quiz        = ss.getSheetByName("Quiz_Responses");
 
   try {
 
-    dashboard.appendRow([new Date(), "STEP 1", "Reached"]);
+    logs.appendRow([new Date(), "STEP 1", "Reached"]);
 
     var payload = JSON.parse(e.parameter.payload);
 
-    dashboard.appendRow([new Date(), "STEP 2", "Payload Parsed"]);
+    logs.appendRow([new Date(), "STEP 2", "Payload Parsed"]);
 
     // Response_ID comes from frontend (top-level for section saves,
     // inside Respondent_Master for final save)
@@ -236,9 +230,9 @@ function doPost(e) {
       || (payload.Respondent_Master && payload.Respondent_Master.Is_Final === true);
 
     if (isFinal) {
-      handleFinalSave(ss, dashboard, respondent, quiz, responseId, payload);
+      handleFinalSave(ss, logs, respondent, quiz, responseId, payload);
     } else {
-      handleSectionSave(ss, dashboard, respondent, quiz, responseId, payload);
+      handleSectionSave(ss, logs, respondent, quiz, responseId, payload);
     }
 
     return ContentService
@@ -249,7 +243,7 @@ function doPost(e) {
 
   } catch (err) {
 
-    dashboard.appendRow([new Date(), "ERROR", err.toString()]);
+    logs.appendRow([new Date(), "ERROR", err.toString()]);
 
     return ContentService
       .createTextOutput(

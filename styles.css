@@ -41,10 +41,9 @@ a {
 }
 
 .app-shell {
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .hero {
@@ -754,6 +753,62 @@ dialog::backdrop {
 
 .full {
   width: 100%;
+}
+
+.about-section {
+  width: min(1120px, calc(100% - 32px));
+  margin: 80px auto;
+  padding: clamp(20px, 4vw, 40px);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 12px 32px rgba(34, 48, 37, 0.08);
+}
+
+.about-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.about-content h2 {
+  font-size: clamp(2rem, 3.5vw, 2.5rem);
+  margin-bottom: 24px;
+  color: var(--leaf);
+}
+
+.about-content h3 {
+  font-size: 1.5rem;
+  margin: 32px 0 16px;
+  color: var(--moss);
+}
+
+.about-content p {
+  color: var(--muted);
+  line-height: 1.65;
+  margin-bottom: 16px;
+  font-size: 1.05rem;
+}
+
+.about-content ul {
+  color: var(--muted);
+  line-height: 1.65;
+  margin-bottom: 24px;
+  font-size: 1.05rem;
+  padding-left: 24px;
+}
+
+.about-content li {
+  margin-bottom: 8px;
+}
+
+.about-content .privacy-note {
+  margin-top: 32px;
+  padding: 16px;
+  background: #f8faf7;
+  border-left: 4px solid var(--leaf);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-style: italic;
 }
 
 @media (max-width: 1050px) {

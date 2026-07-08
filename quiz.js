@@ -15,8 +15,7 @@ const sections = [
           { value: "office", label: "Office Professional", icon: "🏢", helper: "Regular office commute." },
           { value: "wfh", label: "WFH Professional", icon: "🏠", helper: "Home energy matters more." },
           { value: "hybrid", label: "Hybrid Worker", icon: "🔄", helper: "A mix of commute and home energy." },
-          { value: "student", label: "Student", icon: "🎓", helper: "Campus or local travel." },
-          { value: "traveller", label: "Frequent Traveller", icon: "🌍", helper: "Travel footprint matters more." }
+          { value: "student", label: "Student", icon: "🎓", helper: "Campus or local travel." }
         ]
       },
       {
