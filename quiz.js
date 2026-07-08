@@ -3,8 +3,6 @@ const sections = [
     id: "profile",
     name: "Sustainability Profile",
     badge: "Eco Explorer Badge Unlocked",
-    xp: 50,
-    awareness: 10,
     questions: [
       {
         title: "Which best describes your current lifestyle?",
@@ -98,8 +96,6 @@ const sections = [
     id: "mobility",
     name: "Mobility Story",
     badge: "Clean Commuter Badge Unlocked",
-    xp: 70,
-    awareness: 15,
     questions: [
       {
         title: "What's your primary transport mode?",
@@ -189,8 +185,6 @@ const sections = [
     id: "home",
     name: "Home Energy",
     badge: "Energy Saver Badge Unlocked",
-    xp: 65,
-    awareness: 15,
     questions: [
       { title: "AC usage per day?", help: "Use the dial-like slider for summer usage.", type: "range", key: "acHours", value: 4, min: 0, max: 12, step: 1, suffix: " hrs/day" },
       {
@@ -240,8 +234,6 @@ const sections = [
     id: "food",
     name: "Food & Lifestyle",
     badge: "Mindful Consumer Badge Unlocked",
-    xp: 70,
-    awareness: 15,
     questions: [
       {
         title: "Food preference",
@@ -256,7 +248,7 @@ const sections = [
         ]
       },
       { title: "Non-veg consumption frequency", help: "Select meals per week.", type: "range", key: "nonVegMeals", value: 2, min: 0, max: 21, step: 1, suffix: " meals/week" },
-      { title: "Dairy consumption", help: "Fill the milk glass from empty to full.", type: "range", key: "dairy", value: 50, min: 0, max: 100, step: 5, suffix: "%" },
+      { title: "Dairy consumption", help: "Fill the milk glass from empty to full.", type: "range", key: "dairy", value: 0, min: 0, max: 100, step: 5, suffix: "%" },
       { title: "Food delivery frequency", help: "How many food packages arrive monthly?", type: "range", key: "deliveries", value: 4, min: 0, max: 20, step: 1, suffix: " deliveries/month" },
       {
         title: "Reusable items",
@@ -277,8 +269,6 @@ const sections = [
     id: "digital",
     name: "Digital Lifestyle",
     badge: "Digital Minimalist Badge Unlocked",
-    xp: 45,
-    awareness: 10,
     questions: [
       { title: "Number of devices used", help: "Stack your daily digital devices.", type: "range", key: "deviceCount", value: 3, min: 0, max: 10, step: 1, suffix: " devices" },
       {
@@ -301,8 +291,6 @@ const sections = [
     id: "behaviour",
     name: "Sustainability Behaviour",
     badge: "Green Mindset Badge Unlocked",
-    xp: 65,
-    awareness: 15,
     questions: [
       { title: "How important is sustainability?", help: "Rate with leaves.", type: "rating", key: "importance", value: 3, max: 5 },
       {
@@ -348,8 +336,6 @@ const sections = [
     id: "gamification",
     name: "Gamification",
     badge: "Quest Builder Badge Unlocked",
-    xp: 45,
-    awareness: 10,
     questions: [
       {
         title: "Would rewards motivate you?",
@@ -393,8 +379,6 @@ const sections = [
     id: "workplace",
     name: "Workplace ESG",
     badge: "ESG Champion Badge Unlocked",
-    xp: 40,
-    awareness: 10,
     questions: [
       {
         title: "Should companies track employee sustainability?",
@@ -426,8 +410,6 @@ const sections = [
     id: "reflection",
     name: "Open-Ended Reflection",
     badge: "Sustainability Storyteller Badge Unlocked",
-    xp: 50,
-    awareness: 10,
     questions: [
       { title: "Biggest sustainability challenge?", help: "What is one thing preventing you from living more sustainably?", type: "text", key: "biggestChallenge", placeholder: "Example: Sustainable choices are hard to find near me." },
       { title: "Platform feature suggestions", help: "Share your best idea.", type: "text", key: "featureIdea", placeholder: "Example: Show nearby recycling points or green commute rewards." },
@@ -534,6 +516,7 @@ function sectionFor(id) {
 
 function isQuestionVisible(question) {
   if (question.key === "nonVegMeals") return getValue("diet", "") === "nonveg";
+  if (question.key === "metroAccess") return getValue("transport", "") === "metro";
   return true;
 }
 
@@ -705,6 +688,11 @@ function goNext() {
   const finishedSectionId = currentQuestion().sectionId;
   const nextIndex = findNextVisibleIndex(currentIndex);
   if (nextIndex === -1) {
+    // Skip reward screen for reflection — go straight to results
+    if (finishedSectionId === "reflection") {
+      showResults();
+      return;
+    }
     showReward(finishedSectionId);
     return;
   }
@@ -712,6 +700,12 @@ function goNext() {
   if (currentQuestion().sectionId !== finishedSectionId) {
     currentIndex = questions.findLastIndex ? questions.findLastIndex((question, index) => index < nextIndex && isQuestionVisible(question) && question.sectionId === finishedSectionId) : currentIndex;
     if (currentIndex === -1) currentIndex = nextIndex - 1;
+    // Skip reward screen for reflection — go straight to next section
+    if (finishedSectionId === "reflection") {
+      currentIndex = nextIndex;
+      renderQuestion();
+      return;
+    }
     showReward(finishedSectionId);
     return;
   }
@@ -734,14 +728,312 @@ function getBadgeInfo(points) {
   return { name: "Platinum", icon: "🏆" };
 }
 
+// ===== GREEN POINT ENGINE =====
+const greenPointConfig = {
+  maxPoints: {
+    profile: 50,
+    mobility: 250,
+    home: 200,
+    food: 200,
+    digital: 100,
+    behaviour: 150,
+    gamification: 25,
+    workplace: 25
+  },
+  weights: {
+    transport: { walk: 1.0, cycle: 0.9, metro: 0.7, bus: 0.5, bike: 0.3, car: 0.1 },
+    fuel: { ev: 1.0, cng: 0.8, hybrid: 0.6, petrol: 0.3, diesel: 0.1 },
+    longTravel: { train: 1.0, bus: 0.7, car: 0.4, flight: 0.1 },
+    cooking: { induction: 1.0, png: 0.8, mixed: 0.5, lpg: 0.3 },
+    diet: { vegan: 1.0, vegetarian: 0.8, eggetarian: 0.6, nonveg: 0.2 },
+    reusables: { bottle: 0.25, bag: 0.25, lunchbox: 0.25, cup: 0.25 },
+    homeTech: { solar: 0.3, solarHeater: 0.3, rainwater: 0.2, waste: 0.2 },
+    smartDevices: { watch: -0.25, earbuds: -0.25, smartHome: -0.25, glasses: -0.25 }
+  }
+};
+
+function calculateMobilityScore() {
+  const max = greenPointConfig.maxPoints.mobility;
+  let score = 0;
+  
+  const transport = getValue("transport", "car");
+  const tWeight = greenPointConfig.weights.transport[transport] || 0.1;
+  const fuel = getValue("fuel", "petrol");
+  const fWeight = (transport === "car" || transport === "bike") ? (greenPointConfig.weights.fuel[fuel] || 0.3) : 1.0; 
+  score += (max * 0.4) * tWeight;
+  score += (max * 0.2) * fWeight;
+
+  const distance = Number(getValue("distance", 12));
+  const travelDays = getValue("travelDays", ["Mon", "Tue", "Wed"]).length;
+  const distanceImpact = Math.max(0, 1 - (distance * travelDays) / (50 * 7));
+  score += (max * 0.2) * distanceImpact;
+
+  const longTravel = getValue("longTravel", "train");
+  const ltWeight = greenPointConfig.weights.longTravel[longTravel] || 0.5;
+  const flights = Number(getValue("flights", 1));
+  const flightImpact = Math.max(0, 1 - (flights / 10)); 
+  score += (max * 0.1) * ltWeight;
+  score += (max * 0.1) * flightImpact;
+
+  return Math.round(score);
+}
+
+function calculateHomeEnergyScore() {
+  const max = greenPointConfig.maxPoints.home;
+  let score = 0;
+
+  const acHours = Number(getValue("acHours", 4));
+  score += (max * 0.3) * Math.max(0, 1 - (acHours / 12));
+
+  const deviceUsage = Number(getValue("deviceUsage", 60));
+  score += (max * 0.2) * Math.max(0, 1 - (deviceUsage / 100));
+
+  const cooking = getValue("cooking", "lpg");
+  const cWeight = greenPointConfig.weights.cooking[cooking] || 0.3;
+  score += (max * 0.2) * cWeight;
+
+  const homeTech = getValue("homeTech", []);
+  let techScore = 0;
+  homeTech.forEach(tech => {
+    techScore += greenPointConfig.weights.homeTech[tech] || 0;
+  });
+  score += (max * 0.3) * techScore;
+
+  return Math.round(score);
+}
+
+function calculateFoodScore() {
+  const max = greenPointConfig.maxPoints.food;
+  let score = 0;
+
+  const diet = getValue("diet", "vegetarian");
+  const dWeight = greenPointConfig.weights.diet[diet] || 0.5;
+  score += (max * 0.4) * dWeight;
+
+  const nonVegMeals = Number(getValue("nonVegMeals", 2));
+  const dairy = Number(getValue("dairy", 50));
+  const dietImpact = Math.max(0, 1 - (nonVegMeals / 21)); 
+  const dairyImpact = Math.max(0, 1 - (dairy / 100));
+  score += (max * 0.15) * dietImpact;
+  score += (max * 0.15) * dairyImpact;
+
+  const deliveries = Number(getValue("deliveries", 4));
+  score += (max * 0.1) * Math.max(0, 1 - (deliveries / 20));
+
+  const reusables = getValue("reusables", []);
+  let reuseScore = 0;
+  reusables.forEach(item => {
+    reuseScore += greenPointConfig.weights.reusables[item] || 0;
+  });
+  score += (max * 0.2) * Math.min(1, reuseScore);
+
+  return Math.round(score);
+}
+
+function calculateDigitalScore() {
+  const max = greenPointConfig.maxPoints.digital;
+  let score = max; 
+
+  const deviceCount = Number(getValue("deviceCount", 3));
+  score -= (deviceCount * 3); 
+
+  const afterWorkUsage = Number(getValue("afterWorkUsage", 3));
+  score -= (afterWorkUsage * 5); 
+
+  const smartDevices = getValue("smartDevices", []);
+  smartDevices.forEach(device => {
+    score += (max * (greenPointConfig.weights.smartDevices[device] || 0)); 
+  });
+
+  return Math.max(0, Math.round(score));
+}
+
+function calculateBehaviourScore() {
+  const max = greenPointConfig.maxPoints.behaviour;
+  let score = 0;
+
+  const importance = Number(getValue("importance", 3));
+  score += (max * 0.2) * (importance / 5);
+
+  const participation = getValue("participation", []);
+  score += (max * 0.4) * (participation.length / 4); 
+
+  const offset = getValue("offset", "maybe");
+  const oWeight = offset === "yes" ? 1.0 : (offset === "maybe" ? 0.5 : 0);
+  score += (max * 0.2) * oWeight;
+
+  const challenges = getValue("challenges", []);
+  score += (max * 0.2) * (challenges.length > 0 ? 1 : 0.5);
+
+  return Math.round(score);
+}
+
+function calculateSectionGreenPoints(sectionId) {
+  switch (sectionId) {
+    case "profile":
+      const lifestyle = getValue("lifestyle", "office");
+      if (lifestyle === "wfh") return 50;
+      if (lifestyle === "hybrid") return 40;
+      return 20; // office, student
+    case "mobility":
+      return calculateMobilityScore();
+    case "home":
+      return calculateHomeEnergyScore();
+    case "food":
+      return calculateFoodScore();
+    case "digital":
+      return calculateDigitalScore();
+    case "behaviour":
+      return calculateBehaviourScore();
+    case "workplace":
+      const wPart = getValue("workplaceParticipation", []);
+      return Math.round(greenPointConfig.maxPoints.workplace * (wPart.length / 4));
+    case "gamification":
+      return greenPointConfig.maxPoints.gamification;
+    case "reflection":
+      return 0;
+    default:
+      return 0;
+  }
+}
+// ===== AWARENESS ENGINE =====
+const awarenessConfig = {
+  maxPoints: {
+    profile: 0,
+    mobility: 10,
+    home: 10,
+    food: 10,
+    digital: 0,
+    behaviour: 35,
+    workplace: 15,
+    gamification: 5,
+    reflection: 15
+  },
+  weights: {
+    intent: { yes: 1.0, maybe: 0.5, no: 0.0 },
+    importance: { 5: 1.0, 4: 0.8, 3: 0.5, 2: 0.2, 1: 0.0 }
+  }
+};
+
+function calculateKnowledgeScore(sectionId) {
+  let score = 0;
+  if (sectionId === "mobility") {
+    const transport = getValue("transport", "car");
+    const fuel = getValue("fuel", "petrol");
+    if (transport === "walk" || transport === "cycle" || transport === "metro") score += 5;
+    if (fuel === "ev" || fuel === "cng" || fuel === "hybrid") score += 5;
+    return Math.min(awarenessConfig.maxPoints.mobility, score);
+  }
+  if (sectionId === "home") {
+    const homeTech = getValue("homeTech", []);
+    return Math.min(awarenessConfig.maxPoints.home, homeTech.length * 5);
+  }
+  if (sectionId === "food") {
+    const reusables = getValue("reusables", []);
+    const diet = getValue("diet", "vegetarian");
+    if (diet === "vegan" || diet === "vegetarian") score += 5;
+    score += Math.min(5, reusables.length * 2.5);
+    return Math.min(awarenessConfig.maxPoints.food, score);
+  }
+  return 0;
+}
+
+function calculateConsistencyScore() {
+  const maxConsistency = 20;
+  const importance = Number(getValue("importance", 3));
+  
+  const mob = calculateMobilityScore();
+  const home = calculateHomeEnergyScore();
+  const food = calculateFoodScore();
+  const total = mob + home + food; 
+  const percentage = total / 650; 
+  
+  if (importance >= 4) {
+    if (percentage >= 0.5) return maxConsistency;
+    if (percentage >= 0.3) return maxConsistency * 0.5;
+    return 0; 
+  } else if (importance === 3) {
+    if (percentage >= 0.5) return maxConsistency;
+    return maxConsistency * 0.75; 
+  } else {
+    if (percentage >= 0.4) return maxConsistency;
+    return maxConsistency * 0.5;
+  }
+}
+
+function calculateBehaviourAwareness() {
+  const max = awarenessConfig.maxPoints.behaviour;
+  let score = 0;
+  
+  const importance = Number(getValue("importance", 3));
+  score += 10 * (awarenessConfig.weights.importance[importance] || 0.5);
+  
+  const offset = getValue("offset", "maybe");
+  score += 5 * (awarenessConfig.weights.intent[offset] || 0);
+  
+  score += calculateConsistencyScore();
+  
+  return Math.round(score);
+}
+
+function calculateWorkplaceAwareness() {
+  const max = awarenessConfig.maxPoints.workplace;
+  let score = 0;
+  
+  const companyTracking = getValue("companyTracking", "maybe");
+  score += 5 * (awarenessConfig.weights.intent[companyTracking] || 0);
+  
+  const wPart = getValue("workplaceParticipation", []);
+  score += 10 * (wPart.length / 4);
+  
+  return Math.round(score);
+}
+
+function calculateSectionAwareness(sectionId) {
+  switch (sectionId) {
+    case "profile":
+    case "digital":
+      return awarenessConfig.maxPoints[sectionId];
+    case "mobility":
+    case "home":
+    case "food":
+      return calculateKnowledgeScore(sectionId);
+    case "behaviour":
+      return calculateBehaviourAwareness();
+    case "workplace":
+      return calculateWorkplaceAwareness();
+    case "gamification":
+      return awarenessConfig.maxPoints.gamification;
+    case "reflection":
+      let score = 0;
+      if (getValue("biggestChallenge", "").length > 5) score += 5;
+      if (getValue("featureIdea", "").length > 5) score += 5;
+      if (getValue("sustainableLiving", "").length > 5) score += 5;
+      return score;
+    default:
+      return 0;
+  }
+}
+
+// ======================================
+let totalAwarenessScore = 0;
+
 function showReward(sectionId) {
   const section = sectionFor(sectionId);
   rewardSectionId = sectionId;
+  let earnedXp = 0;
+  let earnedAwareness = 0;
   
   if (!awardedSections.has(sectionId)) {
     awardedSections.add(sectionId);
-    walletPoints += section.xp;
+    earnedXp = calculateSectionGreenPoints(sectionId);
+    earnedAwareness = calculateSectionAwareness(sectionId);
+    walletPoints += earnedXp;
+    totalAwarenessScore += earnedAwareness;
     updateWallet(true);
+  } else {
+    earnedXp = calculateSectionGreenPoints(sectionId);
+    earnedAwareness = calculateSectionAwareness(sectionId);
   }
   
   // Silent save after each section
@@ -760,8 +1052,8 @@ function showReward(sectionId) {
   document.querySelector("#rewardSection").textContent = section.name;
   
   // Populate metric flip cards (only on back)
-  document.querySelector("#rewardXpBack").textContent = `+${section.xp} Points`;
-  document.querySelector("#rewardAwarenessBack").textContent = `+${section.awareness} Points`;
+  document.querySelector("#rewardXpBack").textContent = `+${earnedXp} Points`;
+  document.querySelector("#rewardAwarenessBack").textContent = `+${earnedAwareness} Points`;
   
   const badge = getBadgeInfo(walletPoints);
   document.querySelector("#rewardBadgeBack").textContent = badge.name;
@@ -848,6 +1140,8 @@ Respondent_Master: {
     Annual_CO2_t: Number(result.annual.toFixed(2)),
 
     Green_Points: walletPoints,
+
+    Awareness_Score: totalAwarenessScore,
 
     Badge: awardedSections.size + " Badges",
 
