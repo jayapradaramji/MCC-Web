@@ -74,7 +74,10 @@ a {
     linear-gradient(0deg, rgba(23, 33, 28, 0.4), rgba(23, 33, 28, 0));
 }
 
-.topbar,
+.topbar {
+  position: relative;
+}
+
 .hero-copy {
   position: relative;
   z-index: 1;
@@ -105,13 +108,20 @@ a {
 
 .full-brand-logo {
   width: 140px;
-  height: 90px;
+  height: auto;
   object-fit: contain;
-  border-radius: 0;
   background: transparent;
-  padding: 4px;
-  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.85)) drop-shadow(0 0 14px rgba(255, 255, 255, 0.5));
-  transition: filter 260ms ease;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  filter: invert(1) hue-rotate(180deg) brightness(1.2);
+  mix-blend-mode: screen;
+  transition: transform 260ms ease, filter 260ms ease;
+}
+
+.full-brand-logo:hover {
+  transform: scale(1.05);
+  filter: invert(1) hue-rotate(180deg) brightness(1.5);
 }
 
 .hero-copy {
