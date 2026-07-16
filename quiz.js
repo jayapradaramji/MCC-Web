@@ -1568,8 +1568,22 @@ function saveUserDetails() {
     alert("Please enter a valid name (at least 2 letters, letters and spaces only).");
     return;
   }
+  
+  // Anti-spam: check if name is just one repeated letter (e.g. "ffff") or has 4+ consecutive identical letters
+  const distinctNameChars = new Set(nameVal.toLowerCase().replace(/\s/g, ''));
+  if (distinctNameChars.size < 2 || /(.)\1{3,}/i.test(nameVal)) {
+    alert("Please enter a real name.");
+    return;
+  }
+
   if (!emailRegex.test(emailVal)) {
     alert("Please enter a valid email address.");
+    return;
+  }
+  
+  // Anti-spam for email: block obvious junk like "ffff@ffff.com" (4+ consecutive identical characters)
+  if (/(.)\1{4,}/i.test(emailVal.split('@')[0])) {
+    alert("Please enter a real email address.");
     return;
   }
   
