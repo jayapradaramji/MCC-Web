@@ -25,11 +25,12 @@ const sections = [
         options: [
           "Amaravati, Andhra Pradesh",
           "Itanagar, Arunachal Pradesh",
-          "Dispur / Guwahati, Assam",
+          "Guwahati, Assam",
           "Patna, Bihar",
           "Raipur, Chhattisgarh",
           "Panaji, Goa",
-          "Gandhinagar / Ahmedabad, Gujarat",
+          "Ahmedabad, Gujarat",
+          "Gandhinagar, Gujarat",
           "Chandigarh, Haryana",
           "Shimla, Himachal Pradesh",
           "Ranchi, Jharkhand",
@@ -53,7 +54,8 @@ const sections = [
           "Kolkata, West Bengal",
           "Delhi NCR",
           "Puducherry",
-          "Srinagar / Jammu, Jammu and Kashmir",
+          "Srinagar, Jammu and Kashmir",
+          "Jammu, Jammu and Kashmir",
           "Leh, Ladakh",
           "Port Blair, Andaman and Nicobar Islands",
           "Kavaratti, Lakshadweep",
@@ -80,13 +82,15 @@ const sections = [
       {
         title: "Do you have pets?",
         help: "Choose the closest option.",
-        type: "choice",
+        type: "multi",
         key: "pets",
+        value: [],
         options: [
           { value: "dog", label: "Dog", icon: "🐶", helper: "Dog at home." },
           { value: "cat", label: "Cat", icon: "🐱", helper: "Cat at home." },
           { value: "bird", label: "Bird", icon: "🐦", helper: "Bird at home." },
           { value: "fish", label: "Fish", icon: "🐠", helper: "Fish or aquarium." },
+          { value: "others", label: "Others", icon: "🐾", helper: "Specify below." },
           { value: "none", label: "No Pets", icon: "✖", helper: "No regular pet footprint." }
         ]
       }
@@ -105,6 +109,7 @@ const sections = [
         value: [],
         options: [
           { value: "car", label: "Car", icon: "🚗", helper: "Personal four-wheeler." },
+          { value: "auto", label: "Auto", icon: "🛺", helper: "Three-wheeler." },
           { value: "bike", label: "Bike", icon: "🛵", helper: "Two-wheeler." },
           { value: "metro", label: "Metro", icon: "🚇", helper: "Urban rail." },
           { value: "bus", label: "Bus", icon: "🚌", helper: "Shared road transport." },
@@ -153,6 +158,7 @@ const sections = [
           { value: "walk", label: "Walk", icon: "🚶", helper: "Lowest first-mile impact." },
           { value: "cycle", label: "Cycle", icon: "🚲", helper: "Active first-mile trip." },
           { value: "feeder", label: "Feeder Bus", icon: "🚌", helper: "Shared first-mile ride." },
+          { value: "lowspeedev", label: "Low Speed EV", icon: "🔋", helper: "Electric ride." },
           { value: "auto", label: "Auto", icon: "🛺", helper: "Short motorized ride." },
           { value: "personal", label: "Personal Vehicle", icon: "🛵", helper: "Personal first-mile ride." }
         ]
@@ -425,7 +431,7 @@ const questions = sections.flatMap((section) => section.questions.map((question)
 // ===== EMISSION FACTORS (India-Specific) =====
 // Sources: CEA v20.0 (2024), India GHG Program, Shakti Foundation, CGIAR/FAO, DEFRA 2024, ICAO
 const factors = {
-  transport: { car: 0.171, bike: 0.070, metro: 0.035, bus: 0.015, walk: 0, cycle: 0 },  // kg CO₂/pax-km
+  transport: { car: 0.171, auto: 0.040, bike: 0.070, metro: 0.035, bus: 0.015, walk: 0, cycle: 0 },  // kg CO₂/pax-km
   fuel: { petrol: 1, diesel: 1.16, ev: 0.20, hybrid: 0.65, cng: 0.75 },                 // multiplier vs petrol
   cooking: { lpg: 42.5, induction: 16.4, png: 30.0, mixed: 33.0 },                       // kg CO₂/month/household
   diet: { vegetarian: 21.6, vegan: 15.0, eggetarian: 27.0, nonveg: 51.6 },               // kg CO₂/month/person (CGIAR/FAO India)
@@ -522,6 +528,7 @@ const resultsScreen = document.querySelector("#resultsScreen");
 const celebrationModal = document.querySelector("#celebrationModal");
 let isLoggedIn = false;
 let screenBeforeLogin = "landing";
+let actionAfterLogin = null;
 let walletPoints = 0;
 const awardedSections = new Set();
 
@@ -592,7 +599,12 @@ function renderQuestion() {
 
 function hasAnswer(question) {
   if (question.type === "text") return true;
-  if (question.type === "multi" || question.type === "days") return question.value.length > 0;
+  if (question.type === "multi" || question.type === "days") {
+    if (question.value.includes("others")) {
+      return !!(question.customValue && question.customValue.trim() !== "");
+    }
+    return question.value.length > 0;
+  }
   if (question.type === "range") return question.value !== "";
   if (question.type === "rating") return Number(question.value) > 0;
   if (question.type === "select") {
@@ -607,7 +619,11 @@ function renderChoice(question) {
   answerArea.innerHTML = question.options.map((option) => answerButton(question, option)).join("");
   answerArea.querySelectorAll(".answer-option").forEach((button) => {
     button.addEventListener("click", () => {
-      question.value = button.dataset.value;
+      if (question.value === button.dataset.value) {
+        question.value = ""; // Deselect if clicked again
+      } else {
+        question.value = button.dataset.value;
+      }
       renderQuestion();
     });
   });
@@ -615,13 +631,51 @@ function renderChoice(question) {
 
 function renderMulti(question) {
   const options = question.type === "days" ? question.options.map((day) => ({ value: day, label: day, icon: day.slice(0, 1), helper: "Travel day" })) : question.options;
-  answerArea.innerHTML = options.map((option) => answerButton(question, option, true)).join("");
+  
+  let html = options.map((option) => answerButton(question, option, true)).join("");
+  
+  if (question.value.includes("others")) {
+    html += `
+      <div class="custom-input-group" style="margin-top:16px;">
+        <input type="text" id="customMultiInput" class="custom-input" placeholder="Please specify..." value="${question.customValue || ""}" autocomplete="off" />
+      </div>
+    `;
+  }
+  
+  answerArea.innerHTML = html;
+  
+  if (question.value.includes("others")) {
+    const input = answerArea.querySelector("#customMultiInput");
+    input.addEventListener("input", (e) => {
+      question.customValue = e.target.value;
+      nextButton.disabled = !hasAnswer(question);
+    });
+    // Focus the input if they just selected others
+    if (!question.customValue) input.focus();
+  }
+
   answerArea.querySelectorAll(".answer-option").forEach((button) => {
     button.addEventListener("click", () => {
+      const val = button.dataset.value;
       const selected = new Set(question.value);
-      if (selected.has(button.dataset.value)) selected.delete(button.dataset.value);
-      else selected.add(button.dataset.value);
+      
+      if (selected.has(val)) {
+        selected.delete(val);
+      } else {
+        if (val === "none" || val === "others") {
+          selected.clear();
+          selected.add(val);
+        } else {
+          selected.delete("none");
+          selected.delete("others");
+          selected.add(val);
+        }
+      }
+      
       question.value = Array.from(selected);
+      if (!question.value.includes("others")) {
+        question.customValue = "";
+      }
       renderQuestion();
     });
   });
@@ -815,7 +869,7 @@ const greenPointConfig = {
     workplace: 50      // Corporate ESG participation (elevated — systemic impact)
   },
   weights: {
-    transport: { walk: 1.0, cycle: 0.9, metro: 0.7, bus: 0.5, bike: 0.3, car: 0.1 },
+    transport: { walk: 1.0, cycle: 0.9, metro: 0.7, bus: 0.5, auto: 0.4, bike: 0.3, car: 0.1 },
     fuel: { ev: 1.0, cng: 0.8, hybrid: 0.6, petrol: 0.3, diesel: 0.1 },
     longTravel: { train: 1.0, bus: 0.7, car: 0.4, flight: 0.1 },
     cooking: { induction: 1.0, png: 0.8, mixed: 0.5, lpg: 0.3 },
@@ -1300,9 +1354,16 @@ Respondent_Master: {
 
     Household: getValue("household", ""),
 
-    Pets: getValue("pets", ""),
+    Pets: (() => {
+      const petVal = getValue("pets", []);
+      if (petVal.includes("others")) {
+        const q = questions.find(q => q.key === "pets");
+        return q && q.customValue ? q.customValue : "Others";
+      }
+      return petVal.join(", ");
+    })(),
 
-    Transport: getValue("transport", ""),
+    Transport: getValue("transport", "").join ? getValue("transport", "").join(", ") : getValue("transport", ""),
 
     Commute_Distance_km: getValue("distance", ""),
 
@@ -1447,7 +1508,8 @@ async function showResults() {
   document.querySelector("#celebrationCopy").textContent = `You completed the quiz and collected ${walletPoints} Green Points in your wallet.`;
   document.querySelector(".score-orbit").style.setProperty("--score-angle", `${Math.min(result.total / 900, 1) * 360}deg`);
   document.querySelector("#resultTitle").textContent = rounded < 350 ? "You are in a strong green zone." : "You have clear ways to reduce your score.";
-  document.querySelector("#resultCopy").textContent = `Estimated annual footprint: ${result.annual.toFixed(1)} t CO2e. Your wallet has ${walletPoints} Green Points.`;
+  const namePrefix = window.currentUser && window.currentUser.name ? `Hey ${window.currentUser.name}! ` : "";
+  document.querySelector("#resultCopy").textContent = `${namePrefix}Estimated annual footprint: ${result.annual.toFixed(1)} t CO2e. Your wallet has ${walletPoints} Green Points.`;
   document.querySelector("#breakdownList").innerHTML = result.categories.map((category) => `
     <div class="breakdown-item">
       <div class="breakdown-top">
@@ -1492,22 +1554,56 @@ function saveUserDetails() {
   const nameInput = document.querySelector("#userNameInput");
   const emailInput = document.querySelector("#userEmailInput");
   
-  if (!nameInput.value || !emailInput.value) {
+  const nameVal = nameInput.value.trim();
+  const emailVal = emailInput.value.trim();
+  
+  const nameRegex = /^[A-Za-z\s]{2,}$/;
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+  if (!nameVal || !emailVal) {
     alert("Please enter both your name and email.");
     return;
   }
+  if (!nameRegex.test(nameVal)) {
+    alert("Please enter a valid name (at least 2 letters, letters and spaces only).");
+    return;
+  }
+  if (!emailRegex.test(emailVal)) {
+    alert("Please enter a valid email address.");
+    return;
+  }
+  
+  // Autocorrect name to Title Case (Initcap)
+  const formattedName = nameVal.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
   
   window.currentUser = {
-    name: nameInput.value,
-    email: emailInput.value
+    name: formattedName,
+    email: emailVal.toLowerCase()
   };
   
   isLoggedIn = true;
   document.querySelector("#loginButton").textContent = window.currentUser.name;
+  
+  // Update result copy if it's currently showing
+  const resultCopy = document.querySelector("#resultCopy");
+  if (resultCopy && resultCopy.textContent.includes("Estimated annual")) {
+    if (!resultCopy.textContent.startsWith("Hey")) {
+      resultCopy.textContent = `Hey ${window.currentUser.name}! ` + resultCopy.textContent;
+    }
+  }
+
+  // Re-sync payload to backend now that we have the name & email
+  // Code.gs will perform an upsert using the same Response_ID
+  saveQuizResponse(buildPayload()).catch(console.error);
+
   backFromLogin();
   
-  // They are saving from the results screen specifically to download
-  downloadScore();
+  if (actionAfterLogin === "download") {
+    actionAfterLogin = null;
+    downloadScore();
+  } else {
+    actionAfterLogin = null;
+  }
 }
 
 function updateWallet(animate = false) {
@@ -1559,6 +1655,7 @@ function escapeHtml(value) {
 
 function downloadScore() {
   if (!isLoggedIn) {
+    actionAfterLogin = "download";
     screenBeforeLogin = "results";
     showOnly("login");
     return;
@@ -1622,45 +1719,8 @@ function downloadScore() {
 <body>
   <main class="page">
     <section class="certificate">
-      <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="-90 0 500 335" role="img" aria-labelledby="title desc">
-        <title id="title">My Carbon Credit logo</title>
-        <desc id="desc">Eco globe with circular arrows, leaves, homes, and the My Carbon Credit name.</desc>
-        <defs>
-          <linearGradient id="ecoGradient" x1="58" y1="250" x2="255" y2="56" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#1da8c3" />
-            <stop offset="0.45" stop-color="#48b36f" />
-            <stop offset="1" stop-color="#9bcf4d" />
-          </linearGradient>
-          <linearGradient id="textGradient" x1="20" y1="0" x2="300" y2="0" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#1da8c3" />
-            <stop offset="0.45" stop-color="#48b36f" />
-            <stop offset="1" stop-color="#9bcf4d" />
-          </linearGradient>
-        </defs>
-        <g fill="none" stroke="url(#ecoGradient)" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M83 96a91 91 0 0 1 87-46" stroke-width="10" />
-          <path d="M219 69a91 91 0 0 1 28 94" stroke-width="10" />
-          <path d="M232 65l35-8-9 34" stroke-width="10" />
-          <path d="M237 206a91 91 0 0 1-155 0" stroke-width="10" />
-          <path d="M72 205l-7 34 33-10" stroke-width="10" />
-          <path d="M168 39c24 28 38 50 38 75 0 25-17 45-38 45s-38-20-38-45c0-25 14-47 38-75z" stroke-width="9" />
-          <path d="M168 72v72" stroke-width="8" />
-          <path d="M94 172c13 1 26 7 33 18 7 12 6 26-2 40-15-2-27-8-35-19-8-12-7-26 4-39z" stroke-width="8" />
-          <path d="M225 143c-24 7-42 22-48 43 21 5 43-3 56-21 6-9 7-16-8-22z" stroke-width="8" />
-        </g>
-        <g fill="url(#ecoGradient)">
-          <path d="M92 234h31v-43l-31 22v21z" />
-          <path d="M131 234h31v-64l-31 21v43z" />
-          <path d="M170 234h31v-55l-31 20v35z" />
-          <path d="M84 220l36-29 21 17 41-38 9 10-50 47-22-18-26 22z" />
-          <path d="M73 124c7 3 12 8 15 16 3 7 4 15 1 22-15-4-24-14-27-29 4-5 7-8 11-9z" opacity=".7" />
-        </g>
-        <text x="160" y="286" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="url(#textGradient)">My Carbon Credit</text>
-        <text x="160" y="312" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" letter-spacing="3.5" fill="#659ba5">ENVIRONMENTAL</text>
-        <text x="160" y="328" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" letter-spacing="3.5" fill="#659ba5">DATA SOLUTIONS</text>
-      </svg>
+      <img class="logo" src="assets/Data Leaf.png" alt="My Carbon Credit logo" />
       <div class="hero">
-        <p class="kicker">MyCarbonCredit</p>
         <!-- ===== UPDATED REPORT TITLE ===== -->
         <h1>MyCarbonCredit Assessment Report</h1>
         <!-- ===== UPDATED SUBTITLE ===== -->
@@ -1747,6 +1807,11 @@ document.querySelector("#downloadButton").addEventListener("click", downloadScor
 document.querySelector("#downloadFromCelebrationButton").addEventListener("click", downloadScore);
 document.querySelector("#viewResultsButton").addEventListener("click", () => {
   celebrationModal.hidden = true;
+  if (!isLoggedIn) {
+    actionAfterLogin = "viewResults";
+    screenBeforeLogin = "results";
+    showOnly("login");
+  }
 });
 document.querySelector("#saveUserDetailsButton").addEventListener("click", saveUserDetails);
 document.querySelector("#backFromLoginButton").addEventListener("click", backFromLogin);
