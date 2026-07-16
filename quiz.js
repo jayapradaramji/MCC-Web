@@ -1705,7 +1705,7 @@ function downloadScore() {
     .hero { padding:48px 52px 34px; text-align:center; background:linear-gradient(180deg,#f7fff5,#fffdf8); }
     .logo { position:absolute; top:36px; left:40px; width:120px; z-index:10; }
     .kicker { margin:0 0 10px; color:var(--leaf); font-weight:900; letter-spacing:.16em; text-transform:uppercase; font-size:.76rem; }
-    h1 { margin:0; font-size:clamp(2.4rem,6vw,4.8rem); line-height:.98; }
+    h1 { margin:0; font-size:clamp(1.8rem,4vw,3.2rem); line-height:.98; }
     .awarded { margin:18px auto 0; max-width:660px; color:var(--muted); font-size:1.12rem; line-height:1.55; }
     .score-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
     .score-grid div { background:#fff; padding:22px; text-align:center; }
@@ -1833,6 +1833,31 @@ document.querySelector("#quitFromRewardButton").addEventListener("click", quitQu
 document.querySelector("#cancelCloseButton").addEventListener("click", cancelCloseQuiz);
 document.querySelector("#confirmCloseButton").addEventListener("click", confirmCloseQuiz);
 
+// Field-level on-blur validations
+document.querySelector("#userNameInput").addEventListener("blur", (e) => {
+  const val = e.target.value.trim();
+  if (!val) return;
+  const nameRegex = /^[A-Za-z\s]{2,}$/;
+  const distinctNameChars = new Set(val.toLowerCase().replace(/\s/g, ''));
+  if (!nameRegex.test(val) || distinctNameChars.size < 2 || /(.)\1{3,}/i.test(val)) {
+    alert("Please enter a valid, real name.");
+    e.target.value = "";
+  } else {
+    e.target.value = val.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  }
+});
+
+document.querySelector("#userEmailInput").addEventListener("blur", (e) => {
+  const val = e.target.value.trim();
+  if (!val) return;
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(val) || /(.)\1{4,}/i.test(val.split('@')[0])) {
+    alert("Please enter a real email address.");
+    e.target.value = "";
+  } else {
+    e.target.value = val.toLowerCase();
+  }
+});
 
 
 updateWallet(false);
