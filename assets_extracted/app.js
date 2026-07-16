@@ -15,7 +15,8 @@ const sections = [
           ["wfh", "Work-from-home professional", "Home energy matters more"],
           ["hybrid", "Hybrid worker", "A mix of commute and home energy"],
           ["student", "Student", "Campus or daily local travel"],
-          ["business", "Business owner", "Variable work and travel pattern"]
+          ["business", "Business owner", "Variable work and travel pattern"],
+          ["traveller", "Frequent traveller", "Flights and long trips matter more"]
         ]
       },
       {
