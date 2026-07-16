@@ -3,8 +3,6 @@ const sections = [
     id: "profile",
     name: "Sustainability Profile",
     badge: "Eco Explorer Badge Unlocked",
-    xp: 50,
-    awareness: 10,
     questions: [
       {
         title: "Which best describes your current lifestyle?",
@@ -98,8 +96,6 @@ const sections = [
     id: "mobility",
     name: "Mobility Story",
     badge: "Clean Commuter Badge Unlocked",
-    xp: 70,
-    awareness: 15,
     questions: [
       {
         title: "What's your transport mode?",
@@ -189,8 +185,6 @@ const sections = [
     id: "home",
     name: "Home Energy",
     badge: "Energy Saver Badge Unlocked",
-    xp: 65,
-    awareness: 15,
     questions: [
       { title: "AC usage per day?", help: "Use the dial-like slider for summer usage.", type: "range", key: "acHours", value: "", min: 0, max: 12, step: 1, suffix: " hrs/day" },
       {
@@ -242,8 +236,6 @@ const sections = [
     id: "food",
     name: "Food & Lifestyle",
     badge: "Mindful Consumer Badge Unlocked",
-    xp: 70,
-    awareness: 15,
     questions: [
       {
         title: "Food preference",
@@ -280,8 +272,6 @@ const sections = [
     id: "digital",
     name: "Digital Lifestyle",
     badge: "Digital Minimalist Badge Unlocked",
-    xp: 45,
-    awareness: 10,
     questions: [
       { title: "Number of devices used", help: "Stack your daily digital devices.", type: "range", key: "deviceCount", value: "", min: 0, max: 10, step: 1, suffix: " devices" },
       {
@@ -305,8 +295,6 @@ const sections = [
     id: "behaviour",
     name: "Sustainability Behaviour",
     badge: "Green Mindset Badge Unlocked",
-    xp: 65,
-    awareness: 15,
     questions: [
       { title: "How important is sustainability?", help: "Rate with leaves.", type: "rating", key: "importance", value: 0, max: 5 },
       {
@@ -354,8 +342,6 @@ const sections = [
     id: "gamification",
     name: "Gamification",
     badge: "Quest Builder Badge Unlocked",
-    xp: 45,
-    awareness: 10,
     questions: [
       {
         title: "Would rewards motivate you?",
@@ -399,8 +385,6 @@ const sections = [
     id: "workplace",
     name: "Workplace ESG",
     badge: "ESG Champion Badge Unlocked",
-    xp: 40,
-    awareness: 10,
     questions: [
       {
         title: "Should companies track employee sustainability?",
@@ -433,8 +417,6 @@ const sections = [
     id: "reflection",
     name: "Open-Ended Reflection",
     badge: "Sustainability Storyteller Badge Unlocked",
-    xp: 50,
-    awareness: 10,
     questions: [
       { title: "Biggest sustainability challenge?", help: "What is one thing preventing you from living more sustainably?", type: "text", key: "biggestChallenge", placeholder: "Example: Sustainable choices are hard to find near me." },
       { title: "Platform feature suggestions", help: "Share your best idea.", type: "text", key: "featureIdea", placeholder: "Example: Show nearby recycling points or green commute rewards." },
@@ -800,13 +782,339 @@ function getBadgeInfo(points) {
   return { name: "Platinum", icon: "🏆" };
 }
 
+// ===== GREEN POINT ENGINE =====
+// Category weights aligned with Project Drawdown solution rankings (GtCO₂e impact)
+const greenPointConfig = {
+  maxPoints: {
+    profile: 25,       // Lifestyle baseline (reduced — minimal actionable data)
+    mobility: 250,     // Drawdown #2: Clean mobility / EV adoption
+    home: 200,         // Drawdown #3: Rooftop solar / energy efficiency
+    food: 250,         // Drawdown #1: Plant-rich diet / reduced food waste
+    digital: 75,       // Lower ranking — growing but smaller emission segment
+    behaviour: 125,    // Participation & intent signals
+    gamification: 25,  // Platform engagement
+    workplace: 50      // Corporate ESG participation (elevated — systemic impact)
+  },
+  weights: {
+    transport: { walk: 1.0, cycle: 0.9, metro: 0.7, bus: 0.5, bike: 0.3, car: 0.1 },
+    fuel: { ev: 1.0, cng: 0.8, hybrid: 0.6, petrol: 0.3, diesel: 0.1 },
+    longTravel: { train: 1.0, bus: 0.7, car: 0.4, flight: 0.1 },
+    cooking: { induction: 1.0, png: 0.8, mixed: 0.5, lpg: 0.3 },
+    diet: { vegan: 1.0, vegetarian: 0.8, eggetarian: 0.6, nonveg: 0.2 },
+    reusables: { bottle: 0.25, bag: 0.25, lunchbox: 0.25, cup: 0.25 },
+    homeTech: { solar: 0.3, solarHeater: 0.3, rainwater: 0.2, waste: 0.2 },
+    smartDevices: { watch: -0.25, earbuds: -0.25, smartHome: -0.25, glasses: -0.25, none: 0 }
+  }
+};
+
+function calculateMobilityScore() {
+  const max = greenPointConfig.maxPoints.mobility;
+  let score = 0;
+
+  const transport = getValue("transport", "car");
+  const tWeight = greenPointConfig.weights.transport[transport] || 0.1;
+  const fuel = getValue("fuel", "petrol");
+  const fWeight = (transport === "car" || transport === "bike") ? (greenPointConfig.weights.fuel[fuel] || 0.3) : 1.0;
+  score += (max * 0.4) * tWeight;
+  score += (max * 0.2) * fWeight;
+
+  const distance = Number(getValue("distance", 12));
+  const travelDays = getValue("travelDays", ["Mon", "Tue", "Wed"]).length;
+  const distanceImpact = Math.max(0, 1 - (distance * travelDays) / (50 * 7));
+  score += (max * 0.2) * distanceImpact;
+
+  const longTravel = getValue("longTravel", "train");
+  const ltWeight = greenPointConfig.weights.longTravel[longTravel] || 0.5;
+  const flights = Number(getValue("flights", 1));
+  const flightImpact = Math.max(0, 1 - (flights / 10));
+  score += (max * 0.1) * ltWeight;
+  score += (max * 0.1) * flightImpact;
+
+  return Math.round(score);
+}
+
+function calculateHomeEnergyScore() {
+  const max = greenPointConfig.maxPoints.home;
+  let score = 0;
+
+  const acHours = Number(getValue("acHours", 4));
+  score += (max * 0.3) * Math.max(0, 1 - (acHours / 12));
+
+  const deviceUsage = Number(getValue("deviceUsage", 60));
+  score += (max * 0.2) * Math.max(0, 1 - (deviceUsage / 100));
+
+  const cooking = getValue("cooking", "lpg");
+  const cWeight = greenPointConfig.weights.cooking[cooking] || 0.3;
+  score += (max * 0.2) * cWeight;
+
+  const homeTech = getValue("homeTech", []);
+  let techScore = 0;
+  homeTech.forEach(tech => {
+    techScore += greenPointConfig.weights.homeTech[tech] || 0;
+  });
+  score += (max * 0.3) * techScore;
+
+  return Math.round(score);
+}
+
+function calculateFoodScore() {
+  const max = greenPointConfig.maxPoints.food;
+  let score = 0;
+
+  const diet = getValue("diet", "vegetarian");
+  const dWeight = greenPointConfig.weights.diet[diet] || 0.5;
+  score += (max * 0.4) * dWeight;
+
+  const nonVegMeals = Number(getValue("nonVegMeals", 2));
+  const dairy = Number(getValue("dairy", 50));
+  const dietImpact = Math.max(0, 1 - (nonVegMeals / 21));
+  const dairyImpact = Math.max(0, 1 - (dairy / 100));
+  score += (max * 0.15) * dietImpact;
+  score += (max * 0.15) * dairyImpact;
+
+  const deliveries = Number(getValue("deliveries", 4));
+  score += (max * 0.1) * Math.max(0, 1 - (deliveries / 20));
+
+  const reusables = getValue("reusables", []);
+  let reuseScore = 0;
+  reusables.forEach(item => {
+    reuseScore += greenPointConfig.weights.reusables[item] || 0;
+  });
+  score += (max * 0.2) * Math.min(1, reuseScore);
+
+  return Math.round(score);
+}
+
+function calculateDigitalScore() {
+  const max = greenPointConfig.maxPoints.digital;
+  let score = max;
+
+  const deviceCount = Number(getValue("deviceCount", 3));
+  score -= (deviceCount * 2.5); // Reduced — devices less emission-heavy than transport
+
+  const afterWorkUsage = Number(getValue("afterWorkUsage", 3));
+  score -= (afterWorkUsage * 4); // Aligned with CEA grid factor recalculation
+
+  const smartDevices = getValue("smartDevices", []);
+  smartDevices.forEach(device => {
+    score += (max * (greenPointConfig.weights.smartDevices[device] || 0));
+  });
+
+  return Math.max(0, Math.round(score));
+}
+
+function calculateBehaviourScore() {
+  const max = greenPointConfig.maxPoints.behaviour;
+  let score = 0;
+
+  const importance = Number(getValue("importance", 3));
+  score += (max * 0.2) * (importance / 5);
+
+  const participation = getValue("participation", []);
+  score += (max * 0.4) * (participation.length / 4);
+
+  const offset = getValue("offset", "maybe");
+  score += (max * 0.2) * (greenPointConfig.weights.fuel.ev === 1.0 ? (offset === "yes" ? 1.0 : (offset === "maybe" ? 0.5 : 0)) : 0.5);
+
+  const challenges = getValue("challenges", []);
+  score += (max * 0.2) * Math.min(1, challenges.length / 2); // Graduated — more challenges = more score
+
+  return Math.round(score);
+}
+
+function calculateSectionGreenPoints(sectionId) {
+  switch (sectionId) {
+    case "profile":
+      const lifestyle = getValue("lifestyle", "office");
+      if (lifestyle === "wfh") return 25;    // Full — no commute emissions
+      if (lifestyle === "hybrid") return 20;  // Partial commute
+      return 10; // office, student — daily commute
+    case "mobility":
+      return calculateMobilityScore();
+    case "home":
+      return calculateHomeEnergyScore();
+    case "food":
+      return calculateFoodScore();
+    case "digital":
+      return calculateDigitalScore();
+    case "behaviour":
+      return calculateBehaviourScore();
+    case "workplace":
+      const wPart = getValue("workplaceParticipation", []);
+      return Math.round(greenPointConfig.maxPoints.workplace * (wPart.length / 4));
+    case "gamification":
+      return greenPointConfig.maxPoints.gamification;
+    case "reflection":
+      return 0;
+    default:
+      return 0;
+  }
+}
+// ===== AWARENESS ENGINE =====
+// Dimensions aligned with New Ecological Paradigm (NEP) Scale (Dunlap et al., 2000)
+// and Theory of Planned Behaviour (Ajzen, 1991)
+const awarenessConfig = {
+  maxPoints: {
+    profile: 0,        // No awareness signal from profile questions
+    mobility: 10,      // NEP: Fragility of Nature — transport knowledge
+    home: 10,          // NEP: Limits to Growth — resource awareness
+    food: 10,          // NEP: Anti-Anthropocentrism — ecological empathy
+    digital: 0,        // No awareness signal from device counts
+    behaviour: 35,     // NEP: Anti-Exemptionalism — personal responsibility (15 intent + 20 consistency)
+    workplace: 25,     // NEP: Ecological Crisis — action orientation (elevated per GRI)
+    gamification: 5,   // Engagement signal
+    reflection: 5      // Reduced — reflection skips reward screen
+  },
+  weights: {
+    intent: { yes: 1.0, maybe: 0.5, no: 0.0 },
+    importance: { 5: 1.0, 4: 0.8, 3: 0.5, 2: 0.2, 1: 0.0 },
+    // Prochaska's Stages of Change — used for payload classification
+    stages: {
+      preContemplation: { maxImportance: 2, maxParticipation: 0 },
+      contemplation: { maxImportance: 3, maxParticipation: 1 },
+      action: { maxImportance: 4, maxParticipation: 2 },
+      maintenance: { minImportance: 4, minParticipation: 3 }
+    }
+  }
+};
+
+// ===== KNOWLEDGE SCORE (NEP: Applied Environmental Knowledge) =====
+function calculateKnowledgeScore(sectionId) {
+  let score = 0;
+  if (sectionId === "mobility") {
+    const transport = getValue("transport", "car");
+    const fuel = getValue("fuel", "petrol");
+    if (transport === "walk" || transport === "cycle" || transport === "metro") score += 5;
+    if (fuel === "ev" || fuel === "cng" || fuel === "hybrid") score += 5;
+    return Math.min(awarenessConfig.maxPoints.mobility, score);
+  }
+  if (sectionId === "home") {
+    const homeTech = getValue("homeTech", []);
+    return Math.min(awarenessConfig.maxPoints.home, homeTech.length * 2.5); // All 4 techs = full 10 pts
+  }
+  if (sectionId === "food") {
+    const reusables = getValue("reusables", []);
+    const diet = getValue("diet", "vegetarian");
+    if (diet === "vegan" || diet === "vegetarian") score += 5;
+    score += Math.min(5, reusables.length * 1.25); // All 4 reusables = full 5 pts
+    return Math.min(awarenessConfig.maxPoints.food, score);
+  }
+  return 0;
+}
+
+// ===== CONSISTENCY SCORE (Theory of Planned Behaviour) =====
+function calculateConsistencyScore() {
+  const maxConsistency = 20;
+  const importance = Number(getValue("importance", 3));
+
+  // Dynamic divisor — sum of actual max points for mobility + home + food
+  const greenMaxSum = greenPointConfig.maxPoints.mobility + greenPointConfig.maxPoints.home + greenPointConfig.maxPoints.food;
+  const mob = calculateMobilityScore();
+  const home = calculateHomeEnergyScore();
+  const food = calculateFoodScore();
+  const total = mob + home + food;
+  const percentage = total / greenMaxSum; // Dynamic instead of hardcoded 650
+
+  // High importance: penalize if behaviour doesn't match
+  if (importance >= 4) {
+    if (percentage >= 0.5) return maxConsistency;
+    if (percentage >= 0.3) return maxConsistency * 0.5;
+    return 0; // Greenwashing penalty
+    // Moderate importance: more lenient
+  } else if (importance === 3) {
+    if (percentage >= 0.5) return maxConsistency;
+    return maxConsistency * 0.75;
+    // Low importance: reward if actions are better than stated
+  } else {
+    if (percentage >= 0.4) return maxConsistency; // Honest sustainability bonus
+    return maxConsistency * 0.5;
+  }
+}
+
+// ===== BEHAVIOUR AWARENESS (NEP: Anti-Exemptionalism) =====
+function calculateBehaviourAwareness() {
+  const max = awarenessConfig.maxPoints.behaviour;
+  let score = 0;
+
+  const importance = Number(getValue("importance", 3));
+  score += 10 * (awarenessConfig.weights.importance[importance] || 0.5);
+
+  const offset = getValue("offset", "maybe");
+  score += 5 * (awarenessConfig.weights.intent[offset] || 0);
+
+  score += calculateConsistencyScore();
+
+  return Math.round(score);
+}
+
+// ===== WORKPLACE AWARENESS (GRI Standards — ESG Engagement) =====
+function calculateWorkplaceAwareness() {
+  const max = awarenessConfig.maxPoints.workplace;
+  let score = 0;
+
+  const companyTracking = getValue("companyTracking", "maybe");
+  score += (max * 0.3) * (awarenessConfig.weights.intent[companyTracking] || 0); // 7.5 pts max
+
+  const wPart = getValue("workplaceParticipation", []);
+  score += (max * 0.7) * (wPart.length / 4); // 17.5 pts max
+
+  return Math.round(score);
+}
+
+// ===== SUSTAINABILITY STAGE (Prochaska's Stages of Change) =====
+function getSustainabilityStage() {
+  const importance = Number(getValue("importance", 3));
+  const participation = getValue("participation", []).length;
+  const greenMaxSum = greenPointConfig.maxPoints.mobility + greenPointConfig.maxPoints.home + greenPointConfig.maxPoints.food;
+  const greenPct = (calculateMobilityScore() + calculateHomeEnergyScore() + calculateFoodScore()) / greenMaxSum;
+
+  if (importance >= 4 && participation >= 3 && greenPct >= 0.5) return "Maintenance";
+  if (importance >= 3 && participation >= 2 && greenPct >= 0.3) return "Action";
+  if (importance >= 3 || participation >= 1) return "Contemplation";
+  return "Pre-contemplation";
+}
+
+function calculateSectionAwareness(sectionId) {
+  switch (sectionId) {
+    case "profile":
+    case "digital":
+      return awarenessConfig.maxPoints[sectionId];
+    case "mobility":
+    case "home":
+    case "food":
+      return calculateKnowledgeScore(sectionId);
+    case "behaviour":
+      return calculateBehaviourAwareness();
+    case "workplace":
+      return calculateWorkplaceAwareness();
+    case "gamification":
+      return awarenessConfig.maxPoints.gamification;
+    case "reflection":
+      let score = 0;
+      if (getValue("biggestChallenge", "").length > 10) score += 2;  // 10 chars min to prevent gaming
+      if (getValue("featureIdea", "").length > 10) score += 2;
+      if (getValue("sustainableLiving", "").length > 10) score += 1;
+      return score;
+    default:
+      return 0;
+  }
+}
+
+// ======================================
+let totalAwarenessScore = 0;
+
 function showReward(sectionId) {
   const section = sectionFor(sectionId);
   rewardSectionId = sectionId;
+  let earnedXp = 0;
+  let earnedAwareness = 0;
 
   if (!awardedSections.has(sectionId)) {
     awardedSections.add(sectionId);
-    walletPoints += section.xp;
+    earnedXp = calculateSectionGreenPoints(sectionId);
+    earnedAwareness = calculateSectionAwareness(sectionId);
+    walletPoints += earnedXp;
+    totalAwarenessScore += earnedAwareness;
     updateWallet(true);
   } else {
     earnedXp = calculateSectionGreenPoints(sectionId);
@@ -829,8 +1137,8 @@ function showReward(sectionId) {
   document.querySelector("#rewardSection").textContent = section.name;
 
   // Populate metric flip cards (only on back)
-  document.querySelector("#rewardXpBack").textContent = `+${section.xp} Points`;
-  document.querySelector("#rewardAwarenessBack").textContent = `+${section.awareness} Points`;
+  document.querySelector("#rewardXpBack").textContent = `+${earnedXp} Points`;
+  document.querySelector("#rewardAwarenessBack").textContent = `+${earnedAwareness} Points`;
 
   const badge = getBadgeInfo(walletPoints);
   document.querySelector("#rewardBadgeBack").textContent = badge.name;
