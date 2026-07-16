@@ -21,7 +21,7 @@ const sections = [
         help: "City helps tune regional assumptions later.",
         type: "select",
         key: "location",
-        value: "Bengaluru, Karnataka",
+        value: "",
         options: [
           "Amaravati, Andhra Pradesh",
           "Itanagar, Arunachal Pradesh",
@@ -63,7 +63,7 @@ const sections = [
           "Kochi, Kerala",
           "Mysuru, Karnataka",
           "Visakhapatnam, Andhra Pradesh",
-          "Other city / state"
+          "Others"
         ]
       },
       {
@@ -71,7 +71,7 @@ const sections = [
         help: "Move the slider to match your household.",
         type: "range",
         key: "household",
-        value: 4,
+        value: "",
         min: 1,
         max: 10,
         step: 1,
@@ -98,10 +98,11 @@ const sections = [
     badge: "Clean Commuter Badge Unlocked",
     questions: [
       {
-        title: "What's your primary transport mode?",
-        help: "Swipe mentally, tap physically.",
-        type: "choice",
+        title: "What's your transport mode?",
+        help: "Select all modes you regularly use.",
+        type: "multi",
         key: "transport",
+        value: [],
         options: [
           { value: "car", label: "Car", icon: "🚗", helper: "Personal four-wheeler." },
           { value: "bike", label: "Bike", icon: "🛵", helper: "Two-wheeler." },
@@ -116,7 +117,7 @@ const sections = [
         help: "0 km means minimal travel emissions. 50+ km flags a longer commute.",
         type: "range",
         key: "distance",
-        value: 12,
+        value: "",
         min: 0,
         max: 50,
         step: 1,
@@ -127,7 +128,7 @@ const sections = [
         help: "Tap the days you normally travel.",
         type: "days",
         key: "travelDays",
-        value: ["Mon", "Tue", "Wed"],
+        value: [],
         options: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
       },
       {
@@ -173,7 +174,7 @@ const sections = [
         help: "Use the counter for annual flight count.",
         type: "range",
         key: "flights",
-        value: 1,
+        value: "",
         min: 0,
         max: 20,
         step: 1,
@@ -186,13 +187,13 @@ const sections = [
     name: "Home Energy",
     badge: "Energy Saver Badge Unlocked",
     questions: [
-      { title: "AC usage per day?", help: "Use the dial-like slider for summer usage.", type: "range", key: "acHours", value: 4, min: 0, max: 12, step: 1, suffix: " hrs/day" },
+      { title: "AC usage per day?", help: "Use the dial-like slider for summer usage.", type: "range", key: "acHours", value: "", min: 0, max: 12, step: 1, suffix: " hrs/day" },
       {
         title: "Select appliances you use daily",
         help: "Selected items glow green.",
         type: "multi",
         key: "appliances",
-        value: ["laptop", "router", "fan"],
+        value: [],
         options: [
           { value: "laptop", label: "Laptop", icon: "💻", helper: "Work or study device." },
           { value: "tv", label: "TV", icon: "📺", helper: "Entertainment device." },
@@ -202,7 +203,7 @@ const sections = [
           { value: "heater", label: "Water Heater", icon: "♨", helper: "High heat load." }
         ]
       },
-      { title: "Device usage hours", help: "Think of this as your daily battery meter.", type: "range", key: "deviceUsage", value: 60, min: 0, max: 100, step: 5, suffix: "%" },
+      { title: "Device usage hours", help: "Think of this as your daily battery meter.", type: "range", key: "deviceUsage", value: "", min: 0, max: 100, step: 5, suffix: "%" },
       {
         title: "Cooking energy source",
         help: "Pick the kitchen energy source you use most.",
@@ -247,15 +248,15 @@ const sections = [
           { value: "nonveg", label: "Non-Vegetarian", icon: "🍗", helper: "Regular meat or fish meals." }
         ]
       },
-      { title: "Non-veg consumption frequency", help: "Select meals per week.", type: "range", key: "nonVegMeals", value: 2, min: 0, max: 21, step: 1, suffix: " meals/week" },
-      { title: "Dairy consumption", help: "Fill the milk glass from empty to full.", type: "range", key: "dairy", value: 0, min: 0, max: 100, step: 5, suffix: "%" },
-      { title: "Food delivery frequency", help: "How many food packages arrive monthly?", type: "range", key: "deliveries", value: 4, min: 0, max: 20, step: 1, suffix: " deliveries/month" },
+      { title: "Non-veg consumption frequency", help: "Select meals per week.", type: "range", key: "nonVegMeals", value: "", min: 0, max: 21, step: 1, suffix: " meals/week" },
+      { title: "Dairy consumption", help: "Fill the milk glass from empty to full.", type: "range", key: "dairy", value: "", min: 0, max: 100, step: 5, suffix: "%" },
+      { title: "Food delivery frequency", help: "How many food packages arrive monthly?", type: "range", key: "deliveries", value: "", min: 0, max: 20, step: 1, suffix: " deliveries/month" },
       {
         title: "Reusable items",
         help: "Each click fills a green habit heart.",
         type: "multi",
         key: "reusables",
-        value: ["bottle"],
+        value: [],
         options: [
           { value: "bottle", label: "Carry bottle", icon: "❤", helper: "Avoid single-use bottles." },
           { value: "bag", label: "Cloth bag", icon: "❤", helper: "Avoid plastic bags." },
@@ -270,7 +271,7 @@ const sections = [
     name: "Digital Lifestyle",
     badge: "Digital Minimalist Badge Unlocked",
     questions: [
-      { title: "Number of devices used", help: "Stack your daily digital devices.", type: "range", key: "deviceCount", value: 3, min: 0, max: 10, step: 1, suffix: " devices" },
+      { title: "Number of devices used", help: "Stack your daily digital devices.", type: "range", key: "deviceCount", value: "", min: 0, max: 10, step: 1, suffix: " devices" },
       {
         title: "Smart devices used",
         help: "Select the technology badges you use.",
@@ -285,7 +286,7 @@ const sections = [
           { value: "none", label: "Not applicable", icon: "✖", helper: "No smart devices." }
         ]
       },
-      { title: "Device usage after work", help: "Drag from work end toward sleep.", type: "range", key: "afterWorkUsage", value: 3, min: 0, max: 8, step: 1, suffix: " hrs" }
+      { title: "Device usage after work", help: "Drag from work end toward sleep.", type: "range", key: "afterWorkUsage", value: "", min: 0, max: 8, step: 1, suffix: " hrs" }
     ]
   },
   {
@@ -293,7 +294,7 @@ const sections = [
     name: "Sustainability Behaviour",
     badge: "Green Mindset Badge Unlocked",
     questions: [
-      { title: "How important is sustainability?", help: "Rate with leaves.", type: "rating", key: "importance", value: 3, max: 5 },
+      { title: "How important is sustainability?", help: "Rate with leaves.", type: "rating", key: "importance", value: 0, max: 5 },
       {
         title: "Sustainability challenges",
         help: "Pick the barriers that affect you.",
@@ -534,7 +535,7 @@ function sectionFor(id) {
 
 function isQuestionVisible(question) {
   if (question.key === "nonVegMeals") return getValue("diet", "") === "nonveg";
-  if (question.key === "metroAccess") return getValue("transport", "") === "metro";
+  if (question.key === "metroAccess") return getValue("transport", []).includes("metro");
   return true;
 }
 
@@ -577,8 +578,7 @@ function renderQuestion() {
   title.textContent = question.title;
   help.textContent = question.help;
   const prevIndex = findPreviousVisibleIndex(currentIndex);
-  const isFirstInSection = prevIndex === -1 || questions[prevIndex].sectionId !== question.sectionId;
-  backButton.style.visibility = isFirstInSection ? "hidden" : "visible";
+  backButton.style.visibility = prevIndex === -1 ? "hidden" : "visible";
   nextButton.textContent = findNextVisibleIndex(currentIndex) === -1 ? "Finish quiz →" : "Next →";
   nextButton.disabled = !hasAnswer(question);
 
@@ -592,10 +592,15 @@ function renderQuestion() {
 
 function hasAnswer(question) {
   if (question.type === "text") return true;
-  if (question.type === "multi") return true;
-  if (question.type === "days") return question.value.length > 0;
-  if (Array.isArray(question.value)) return question.value.length > 0;
-  return question.type === "range" || question.type === "select" || question.type === "rating" || question.value !== "";
+  if (question.type === "multi" || question.type === "days") return question.value.length > 0;
+  if (question.type === "range") return question.value !== "";
+  if (question.type === "rating") return Number(question.value) > 0;
+  if (question.type === "select") {
+    if (question.value === "Others") return !!(question.customValue && question.customValue.trim() !== "");
+    return question.value !== "";
+  }
+  // choice
+  return question.value !== "";
 }
 
 function renderChoice(question) {
@@ -637,13 +642,17 @@ function answerButton(question, option, multi = false) {
 }
 
 function renderRange(question) {
+  const isUnanswered = question.value === "";
+  const startValue = isUnanswered ? question.min : question.value;
+  const displayValue = isUnanswered ? `<span style="color:var(--muted,#8a9a8d);font-size:1rem;font-weight:400;">Move the slider to answer</span>` : `${question.value}${question.suffix}`;
+
   answerArea.innerHTML = `
     <div class="range-answer">
       <div class="range-readout">
         <span>${question.title}</span>
-        <strong id="rangeValue">${question.value}${question.suffix}</strong>
+        <strong id="rangeValue">${displayValue}</strong>
       </div>
-      <input type="range" min="${question.min}" max="${question.max}" step="${question.step}" value="${question.value}" />
+      <input type="range" min="${question.min}" max="${question.max}" step="${question.step}" value="${startValue}" />
       <div class="tick-row">
         <span>${question.min}${question.suffix}</span>
         <span>${question.max}${question.suffix}</span>
@@ -654,7 +663,9 @@ function renderRange(question) {
   const readout = answerArea.querySelector("#rangeValue");
   input.addEventListener("input", () => {
     question.value = Number(input.value);
-    readout.textContent = `${question.value}${question.suffix}`;
+    readout.innerHTML = `${question.value}${question.suffix}`;
+    readout.style.color = "";
+    readout.style.fontWeight = "";
     nextButton.disabled = false;
   });
 }
@@ -676,17 +687,61 @@ function renderRating(question) {
 }
 
 function renderSelect(question) {
+  const isOthers = question.value === "Others";
   answerArea.innerHTML = `
     <div class="select-answer">
       <select aria-label="${question.title}">
-        ${question.options.map((option) => `<option ${question.value === option ? "selected" : ""}>${option}</option>`).join("")}
+        <option value="" disabled ${question.value === "" ? "selected" : ""}>Select your city</option>
+        ${question.options.map((option) => `<option value="${option}" ${question.value === option ? "selected" : ""}>${option}</option>`).join("")}
       </select>
+      <div class="other-city-wrap" style="${isOthers ? "" : "display:none;"}margin-top:16px;">
+        <input
+          type="text"
+          id="otherCityInput"
+          class="other-city-input"
+          placeholder="Type your city name..."
+          value="${isOthers && question.customValue ? question.customValue : ""}"
+          style="width:100%;padding:14px;border:1.5px solid var(--line,#d0cfc7);border-radius:12px;font-size:1rem;outline:none;box-sizing:border-box;"
+        />
+      </div>
     </div>
   `;
-  answerArea.querySelector("select").addEventListener("change", (event) => {
-    question.value = event.target.value;
-    nextButton.disabled = false;
+
+  const select = answerArea.querySelector("select");
+  const otherWrap = answerArea.querySelector(".other-city-wrap");
+  const otherInput = answerArea.querySelector("#otherCityInput");
+
+  select.addEventListener("change", (event) => {
+    const val = event.target.value;
+    if (val === "Others") {
+      otherWrap.style.display = "";
+      otherInput.focus();
+      question.value = "Others";
+      question.customValue = "";
+      nextButton.disabled = true;
+    } else {
+      otherWrap.style.display = "none";
+      question.value = val;
+      question.customValue = "";
+      nextButton.disabled = false;
+    }
   });
+
+  if (otherInput) {
+    otherInput.addEventListener("input", (event) => {
+      question.customValue = event.target.value.trim();
+      nextButton.disabled = question.customValue === "";
+    });
+    // Pre-fill if returning to this question
+    if (isOthers && question.customValue) {
+      nextButton.disabled = false;
+    }
+  }
+
+  // Ensure Next is disabled if no city selected yet
+  if (question.value === "") {
+    nextButton.disabled = true;
+  }
 }
 
 function renderText(question) {
@@ -775,10 +830,13 @@ function calculateMobilityScore() {
   const max = greenPointConfig.maxPoints.mobility;
   let score = 0;
   
-  const transport = getValue("transport", "car");
-  const tWeight = greenPointConfig.weights.transport[transport] || 0.1;
+  const transportArr = getValue("transport", []);
+  const transport = Array.isArray(transportArr) ? (transportArr[0] || "car") : (transportArr || "car");
+  const tWeight = transportArr.length
+    ? Math.max(...transportArr.map(t => greenPointConfig.weights.transport[t] || 0.1))
+    : 0.1;
   const fuel = getValue("fuel", "petrol");
-  const fWeight = (transport === "car" || transport === "bike") ? (greenPointConfig.weights.fuel[fuel] || 0.3) : 1.0; 
+  const fWeight = (transportArr.includes("car") || transportArr.includes("bike")) ? (greenPointConfig.weights.fuel[fuel] || 0.3) : 1.0;
   score += (max * 0.4) * tWeight;
   score += (max * 0.2) * fWeight;
 
@@ -946,9 +1004,10 @@ const awarenessConfig = {
 function calculateKnowledgeScore(sectionId) {
   let score = 0;
   if (sectionId === "mobility") {
-    const transport = getValue("transport", "car");
+    const transportArr = getValue("transport", []);
     const fuel = getValue("fuel", "petrol");
-    if (transport === "walk" || transport === "cycle" || transport === "metro") score += 5;
+    const lowCarbonModes = ["walk", "cycle", "metro"];
+    if (Array.isArray(transportArr) && transportArr.some(t => lowCarbonModes.includes(t))) score += 5;
     if (fuel === "ev" || fuel === "cng" || fuel === "hybrid") score += 5;
     return Math.min(awarenessConfig.maxPoints.mobility, score);
   }
@@ -1129,11 +1188,15 @@ function householdPeople() {
 }
 
 function calculate() {
-  const transport = getValue("transport", "car");
-  const travelDays = getValue("travelDays", ["Mon", "Tue", "Wed"]).length;
+  const transportArr = getValue("transport", []);
+  // Use the highest-emission mode for commute calculation
+  const transportMode = Array.isArray(transportArr) && transportArr.length
+    ? transportArr.reduce((worst, t) => (factors.transport[t] || 0) > (factors.transport[worst] || 0) ? t : worst, transportArr[0])
+    : "car";
+  const travelDays = getValue("travelDays", []).length;
   const distance = Number(getValue("distance", 12));
   const fuel = getValue("fuel", "petrol");
-  const commuteMode = transport === "cycle" ? "walk" : transport;
+  const commuteMode = transportMode === "cycle" ? "walk" : transportMode;
   const commute = distance * 2 * travelDays * 4.33 * (factors.transport[commuteMode] || 0.12) * (factors.fuel?.[fuel] || 1);
   const acHours = Number(getValue("acHours", 4));
   const appliances = getValue("appliances", []);
@@ -1519,7 +1582,8 @@ function downloadScore() {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>My Carbon Credit Certificate</title>
+  <!-- ===== UPDATED PAGE TITLE ===== -->
+  <title>MyCarbonCredit Assessment Report</title>
   <style>
     :root { --ink:#102119; --muted:#5d6a60; --leaf:#2f7048; --paper:#fbfaf5; --line:#ded8ca; --sun:#d5a46b; }
     * { box-sizing:border-box; }
@@ -1545,6 +1609,12 @@ function downloadScore() {
     ol { margin:0; padding-left:24px; color:var(--muted); line-height:1.55; }
     li strong { color:var(--ink); }
     .footer { display:flex; justify-content:space-between; gap:16px; color:var(--muted); border-top:1px solid var(--line); padding-top:18px; font-weight:800; }
+    /* ===== ADDED DISCLAIMER STYLES ===== */
+    .disclaimer { border-top:1px solid var(--line); margin-top:20px; padding-top:16px; color:var(--muted); font-size:.78rem; line-height:1.6; text-align:left; }
+    .disclaimer strong { color:var(--ink); font-size:.8rem; }
+    /* ===== UPDATED FOOTER STYLES ===== */
+    .footer-brand { text-align:center; color:var(--muted); font-size:.82rem; line-height:1.7; }
+    .footer-brand strong { display:block; font-size:.9rem; color:var(--ink); }
     @media print { body { background:white; } .page { width:100%; margin:0; } .certificate { box-shadow:none; } }
     @media (max-width:720px) { .hero,.content { padding-left:24px; padding-right:24px; } .score-grid { grid-template-columns:1fr; } .breakdown-row { grid-template-columns:1fr; gap:8px; } .footer { display:grid; } }
   </style>
@@ -1590,9 +1660,12 @@ function downloadScore() {
         <text x="160" y="328" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" letter-spacing="3.5" fill="#659ba5">DATA SOLUTIONS</text>
       </svg>
       <div class="hero">
-        <p class="kicker">My Carbon Credit</p>
-        <h1>Certificate of Carbon Awareness</h1>
-        <p class="awarded">This certificate recognizes completion of the Green Score Quiz and records an estimated personal carbon footprint with earned Green Points.</p>
+        <p class="kicker">MyCarbonCredit</p>
+        <!-- ===== UPDATED REPORT TITLE ===== -->
+        <h1>MyCarbonCredit Assessment Report</h1>
+        <!-- ===== UPDATED SUBTITLE ===== -->
+        <p class="awarded">Generated as part of the MyCarbonCredit Sustainability Assessment.</p>
+        <p class="awarded" style="margin-top:10px; font-size:1rem;">This report summarizes your participation in the MyCarbonCredit Sustainability Assessment and presents an indicative estimate of your carbon footprint, Green Points and sustainability insights based on your responses.</p>
       </div>
       <div class="score-grid">
         <div><strong>${rounded}</strong><span>kg CO2e / month</span></div>
@@ -1608,9 +1681,17 @@ function downloadScore() {
           <h2>Action Recommendations</h2>
           <ol>${recommendations}</ol>
         </section>
+        <!-- ===== UPDATED FOOTER ===== -->
         <div class="footer">
-          <span>Issued on ${issuedOn}</span>
-          <span>My Carbon Credit Environmental Data Solutions</span>
+          <span>Generated on ${issuedOn}</span>
+          <div class="footer-brand">
+            <strong>Generated by MyCarbonCredit</strong>
+            PGDM Capstone Project &nbsp;·&nbsp; Goa Institute of Management
+          </div>
+        </div>
+        <!-- ===== ADDED DISCLAIMER ===== -->
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> This report is generated for educational and awareness purposes as part of a PGDM Capstone Project. The carbon footprint values are indicative estimates derived from user responses and standard emission assumptions. They should not be interpreted as a certified or audited carbon assessment.
         </div>
       </div>
     </section>
@@ -1620,7 +1701,7 @@ function downloadScore() {
   const blob = new Blob([certificate], { type: "text/html" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = "my-carbon-credit-certificate.html";
+  link.download = "mycarboncredit-assessment-report.html";
   link.click();
   URL.revokeObjectURL(link.href);
 }
