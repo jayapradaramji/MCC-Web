@@ -1334,7 +1334,7 @@ Respondent_Master: {
 
     Occupation: "",
 
-    Age_Group: "",
+    Age_Group: window.currentUser ? window.currentUser.ageGroup || "" : "",
 
     Carbon_Score: Math.round(result.total),
 
@@ -1589,12 +1589,15 @@ function backFromLogin() {
 function saveUserDetails() {
   const nameInput = document.querySelector("#userNameInput");
   const emailInput = document.querySelector("#userEmailInput");
+  const ageInput = document.querySelector("#userAgeInput");
   
   const nameVal = nameInput.value.trim();
   const emailVal = emailInput.value.trim();
+  const ageVal = ageInput.value.trim();
   
   const nameError = document.querySelector("#nameError");
   const emailError = document.querySelector("#emailError");
+  const ageError = document.querySelector("#ageError");
   let isValid = true;
   
   // Name Validation
@@ -1628,6 +1631,17 @@ function saveUserDetails() {
     emailInput.style.borderColor = "var(--line)";
   }
 
+  // Age Validation
+  if (!ageVal) {
+    ageError.textContent = "Please select your age group.";
+    ageError.style.display = "block";
+    ageInput.style.borderColor = "#d93025";
+    isValid = false;
+  } else {
+    ageError.style.display = "none";
+    ageInput.style.borderColor = "var(--line)";
+  }
+
   if (!isValid) return;
   
   // Autocorrect name to Title Case (Initcap)
@@ -1635,7 +1649,8 @@ function saveUserDetails() {
   
   window.currentUser = {
     name: formattedName,
-    email: emailVal.toLowerCase()
+    email: emailVal.toLowerCase(),
+    ageGroup: ageVal
   };
   
   isLoggedIn = true;

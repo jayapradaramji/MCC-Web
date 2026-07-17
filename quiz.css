@@ -165,12 +165,9 @@ textarea {
   box-sizing: border-box;
 }
 
-.landing-screen::before, .landing-screen::after,
-.quiz-stage::before, .quiz-stage::after,
 .reward-screen::before, .reward-screen::after,
 .login-screen::before, .login-screen::after,
-.feedback-screen::before, .feedback-screen::after,
-.results-screen::before, .results-screen::after {
+.feedback-screen::before, .feedback-screen::after {
   content: "";
   flex: 1;
   flex-shrink: 0;
