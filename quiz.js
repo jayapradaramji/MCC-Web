@@ -1653,14 +1653,29 @@ function saveUserDetails() {
   // Code.gs will perform an upsert using the same Response_ID
   saveQuizResponse(buildPayload()).catch(console.error);
 
-  backFromLogin();
-  
-  if (actionAfterLogin === "download") {
+  if (actionAfterLogin === "downloadOnly") {
     actionAfterLogin = null;
     downloadScore();
+    showOnly("results");
+    showThankYouScreen();
+  } else if (actionAfterLogin === "download") {
+    actionAfterLogin = null;
+    downloadScore();
+    backFromLogin();
   } else {
     actionAfterLogin = null;
+    backFromLogin();
   }
+}
+
+function showThankYouScreen() {
+  const resultsScreen = document.querySelector("#resultsScreen");
+  resultsScreen.innerHTML = `
+    <div class="result-hero" style="margin: auto 0; padding: 40px 20px;">
+      <h1 style="color:var(--leaf); margin-bottom:16px;">Assessment results downloaded.</h1>
+      <p style="font-size:1.2rem; color:var(--muted);">Thank you for your participation.</p>
+    </div>
+  `;
 }
 
 function updateWallet(animate = false) {
@@ -1861,12 +1876,24 @@ continueButton.addEventListener("click", continueFromReward);
 document.querySelector("#startQuizButton").addEventListener("click", startQuiz);
 document.querySelector("#restartButton").addEventListener("click", restart);
 document.querySelector("#downloadButton").addEventListener("click", downloadScore);
-document.querySelector("#downloadFromCelebrationButton").addEventListener("click", downloadScore);
+document.querySelector("#downloadFromCelebrationButton").addEventListener("click", () => {
+  celebrationModal.hidden = true;
+  if (!isLoggedIn) {
+    actionAfterLogin = "downloadOnly";
+    screenBeforeLogin = "results";
+    document.querySelector("#saveUserDetailsButton").textContent = "Save & Download";
+    showOnly("login");
+  } else {
+    downloadScore();
+    showThankYouScreen();
+  }
+});
 document.querySelector("#viewResultsButton").addEventListener("click", () => {
   celebrationModal.hidden = true;
   if (!isLoggedIn) {
     actionAfterLogin = "viewResults";
     screenBeforeLogin = "results";
+    document.querySelector("#saveUserDetailsButton").textContent = "Save & View";
     showOnly("login");
   }
 });
