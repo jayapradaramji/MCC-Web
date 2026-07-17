@@ -13,7 +13,8 @@ const sections = [
           { value: "office", label: "Office Professional", icon: "🏢", helper: "Regular office commute." },
           { value: "wfh", label: "WFH Professional", icon: "🏠", helper: "Home energy matters more." },
           { value: "hybrid", label: "Hybrid Worker", icon: "🔄", helper: "A mix of commute and home energy." },
-          { value: "student", label: "Student", icon: "🎓", helper: "Campus or local travel." }
+          { value: "student", label: "Student", icon: "🎓", helper: "Campus or local travel." },
+          { value: "others", label: "Others", icon: "🤷", helper: "Homemakers, retired, etc." }
         ]
       },
       {
@@ -324,7 +325,8 @@ const sections = [
           { value: "tree", label: "Tree Planting", icon: "🌳", helper: "Nature-based action." },
           { value: "recycling", label: "Recycling", icon: "♻", helper: "Material recovery." },
           { value: "renewable", label: "Renewable Energy", icon: "☀", helper: "Clean energy support." },
-          { value: "mobility", label: "Green Mobility", icon: "🚲", helper: "Low-carbon movement." }
+          { value: "mobility", label: "Green Mobility", icon: "🚲", helper: "Low-carbon movement." },
+          { value: "none", label: "Not Interested", icon: "✖", helper: "No active participation." }
         ]
       },
       {
@@ -409,7 +411,8 @@ const sections = [
           { value: "commute", label: "Green Commute", icon: "🚲", helper: "Low-carbon work travel." },
           { value: "plantation", label: "Plantation Drive", icon: "🌳", helper: "Team nature action." },
           { value: "energy", label: "Energy Saving", icon: "⚡", helper: "Office energy reduction." },
-          { value: "office", label: "Office Sustainability", icon: "♻", helper: "Workplace waste and resources." }
+          { value: "office", label: "Office Sustainability", icon: "♻", helper: "Workplace waste and resources." },
+          { value: "none", label: "Not Interested", icon: "✖", helper: "No active participation." }
         ]
       }
     ]
@@ -542,6 +545,7 @@ function sectionFor(id) {
 
 function isQuestionVisible(question) {
   if (question.key === "nonVegMeals") return getValue("diet", "") === "nonveg";
+  if (question.key === "dairy") return getValue("diet", "") !== "vegan";
   if (question.key === "metroAccess") return getValue("transport", []).includes("metro");
   return true;
 }
@@ -570,7 +574,15 @@ function findPreviousVisibleIndex(fromIndex) {
 
 function getValue(key, fallback) {
   const question = questions.find((item) => item.key === key);
-  const value = question ? question.value : "";
+  if (!question) return fallback;
+  
+  const value = question.value;
+  
+  // If "Others" is selected and they provided a custom value, return the custom value
+  if (typeof value === "string" && value.toLowerCase() === "others" && question.customValue) {
+    return question.customValue;
+  }
+  
   if (Array.isArray(value)) return value.length ? value : fallback;
   return value !== "" ? value : fallback;
 }
@@ -611,18 +623,43 @@ function hasAnswer(question) {
     if (question.value === "Others") return !!(question.customValue && question.customValue.trim() !== "");
     return question.value !== "";
   }
-  // choice
+  if (question.type === "choice") {
+    if (question.value === "others") return !!(question.customValue && question.customValue.trim() !== "");
+    return question.value !== "";
+  }
   return question.value !== "";
 }
 
 function renderChoice(question) {
-  answerArea.innerHTML = question.options.map((option) => answerButton(question, option)).join("");
+  let html = question.options.map((option) => answerButton(question, option)).join("");
+  
+  if (question.value === "others") {
+    html += `
+      <div class="custom-input-group" style="margin-top:16px;">
+        <input type="text" id="customChoiceInput" class="custom-input" placeholder="Please specify..." value="${question.customValue || ""}" autocomplete="off" style="width:100%;padding:14px;border:1.5px solid var(--line,#d0cfc7);border-radius:12px;font-size:1rem;outline:none;box-sizing:border-box;" />
+      </div>
+    `;
+  }
+  
+  answerArea.innerHTML = html;
+  
+  if (question.value === "others") {
+    const input = answerArea.querySelector("#customChoiceInput");
+    input.addEventListener("input", (e) => {
+      question.customValue = e.target.value;
+      nextButton.disabled = !hasAnswer(question);
+    });
+    if (!question.customValue) input.focus();
+  }
+
   answerArea.querySelectorAll(".answer-option").forEach((button) => {
     button.addEventListener("click", () => {
       if (question.value === button.dataset.value) {
         question.value = ""; // Deselect if clicked again
+        question.customValue = "";
       } else {
         question.value = button.dataset.value;
+        if (question.value !== "others") question.customValue = "";
       }
       renderQuestion();
     });
@@ -1504,8 +1541,7 @@ async function showResults() {
   resultsScreen.hidden = false;
   celebrationModal.hidden = false;
   document.querySelector("#scoreValue").textContent = rounded;
-  document.querySelector("#celebrationScore").textContent = rounded;
-  document.querySelector("#celebrationCopy").textContent = `You completed the quiz and collected ${walletPoints} Green Points in your wallet.`;
+  // Celebration text is now static in HTML
   document.querySelector(".score-orbit").style.setProperty("--score-angle", `${Math.min(result.total / 900, 1) * 360}deg`);
   document.querySelector("#resultTitle").textContent = rounded < 350 ? "You are in a strong green zone." : "You have clear ways to reduce your score.";
   const namePrefix = window.currentUser && window.currentUser.name ? `Hey ${window.currentUser.name}! ` : "";
@@ -1557,35 +1593,42 @@ function saveUserDetails() {
   const nameVal = nameInput.value.trim();
   const emailVal = emailInput.value.trim();
   
-  const nameRegex = /^[A-Za-z\s]{2,}$/;
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-  if (!nameVal || !emailVal) {
-    alert("Please enter both your name and email.");
-    return;
-  }
-  if (!nameRegex.test(nameVal)) {
-    alert("Please enter a valid name (at least 2 letters, letters and spaces only).");
-    return;
-  }
+  const nameError = document.querySelector("#nameError");
+  const emailError = document.querySelector("#emailError");
+  let isValid = true;
   
-  // Anti-spam: check if name is just one repeated letter (e.g. "ffff") or has 4+ consecutive identical letters
+  // Name Validation
+  const nameRegex = /^[A-Za-z\s]{3,}$/;
   const distinctNameChars = new Set(nameVal.toLowerCase().replace(/\s/g, ''));
-  if (distinctNameChars.size < 2 || /(.)\1{3,}/i.test(nameVal)) {
-    alert("Please enter a real name.");
-    return;
+  if (!nameVal || !nameRegex.test(nameVal) || distinctNameChars.size < 2 || /(.)\1{3,}/i.test(nameVal)) {
+    nameError.textContent = "Please enter a valid, real name.";
+    nameError.style.display = "block";
+    nameInput.style.borderColor = "#d93025";
+    isValid = false;
+  } else {
+    nameError.style.display = "none";
+    nameInput.style.borderColor = "var(--line)";
   }
 
-  if (!emailRegex.test(emailVal)) {
-    alert("Please enter a valid email address.");
-    return;
-  }
+  // Email Validation
+  const emailRegex = /^[a-zA-Z0-9._%+-]{3,}@[a-zA-Z0-9.-]{3,}\.[a-zA-Z]{2,}$/;
+  const domain = emailVal.split('@')[1]?.toLowerCase();
+  const allowedDomains = ["gmail.com", "yahoo.com", "yahoo.co.in", "yahoo.in", "outlook.com", "hotmail.com", "icloud.com", "microsoft.com", "live.com", "me.com", "mac.com", "msn.com"];
   
-  // Anti-spam for email: block obvious junk like "ffff@ffff.com" (4+ consecutive identical characters)
-  if (/(.)\1{4,}/i.test(emailVal.split('@')[0])) {
-    alert("Please enter a real email address.");
-    return;
+  const isValidFormat = emailRegex.test(emailVal) && !/(.)\1{4,}/i.test(emailVal.split('@')[0]);
+  const isAllowedDomain = allowedDomains.includes(domain);
+
+  if (!emailVal || !isValidFormat || !isAllowedDomain) {
+    emailError.textContent = (!emailVal || !isValidFormat) ? "Please enter a real email address." : "Please use a valid provider (gmail, yahoo, outlook, etc).";
+    emailError.style.display = "block";
+    emailInput.style.borderColor = "#d93025";
+    isValid = false;
+  } else {
+    emailError.style.display = "none";
+    emailInput.style.borderColor = "var(--line)";
   }
+
+  if (!isValid) return;
   
   // Autocorrect name to Title Case (Initcap)
   const formattedName = nameVal.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
@@ -1702,8 +1745,8 @@ function downloadScore() {
     .page { width:min(980px, calc(100% - 32px)); margin:28px auto; }
     .certificate { position:relative; overflow:hidden; border:10px solid #e4dbc6; border-radius:24px; background:white; box-shadow:0 18px 60px rgba(26,38,31,.14); }
     .certificate:before { content:""; position:absolute; inset:18px; border:2px solid rgba(47,112,72,.26); border-radius:14px; pointer-events:none; }
-    .hero { padding:48px 52px 34px; text-align:center; background:linear-gradient(180deg,#f7fff5,#fffdf8); }
-    .logo { position:absolute; top:36px; left:40px; width:120px; z-index:10; }
+    .hero { padding:130px 52px 34px; text-align:center; background:linear-gradient(180deg,#f7fff5,#fffdf8); }
+    .logo { position:absolute; top:40px; left:40px; width:100px; z-index:10; }
     .kicker { margin:0 0 10px; color:var(--leaf); font-weight:900; letter-spacing:.16em; text-transform:uppercase; font-size:.76rem; }
     h1 { margin:0; font-size:clamp(1.8rem,4vw,3.2rem); line-height:.98; }
     .awarded { margin:18px auto 0; max-width:660px; color:var(--muted); font-size:1.12rem; line-height:1.55; }
@@ -1836,25 +1879,41 @@ document.querySelector("#confirmCloseButton").addEventListener("click", confirmC
 // Field-level on-blur validations
 document.querySelector("#userNameInput").addEventListener("blur", (e) => {
   const val = e.target.value.trim();
-  if (!val) return;
-  const nameRegex = /^[A-Za-z\s]{2,}$/;
+  const errorSpan = document.querySelector("#nameError");
+  if (!val) { errorSpan.style.display = "none"; e.target.style.borderColor = "var(--line)"; return; }
+  
+  const nameRegex = /^[A-Za-z\s]{3,}$/;
   const distinctNameChars = new Set(val.toLowerCase().replace(/\s/g, ''));
   if (!nameRegex.test(val) || distinctNameChars.size < 2 || /(.)\1{3,}/i.test(val)) {
-    alert("Please enter a valid, real name.");
-    e.target.value = "";
+    errorSpan.textContent = "Please enter a valid, real name.";
+    errorSpan.style.display = "block";
+    e.target.style.borderColor = "#d93025";
   } else {
+    errorSpan.style.display = "none";
+    e.target.style.borderColor = "var(--line)";
     e.target.value = val.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
   }
 });
 
 document.querySelector("#userEmailInput").addEventListener("blur", (e) => {
   const val = e.target.value.trim();
-  if (!val) return;
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  if (!emailRegex.test(val) || /(.)\1{4,}/i.test(val.split('@')[0])) {
-    alert("Please enter a real email address.");
-    e.target.value = "";
+  const errorSpan = document.querySelector("#emailError");
+  if (!val) { errorSpan.style.display = "none"; e.target.style.borderColor = "var(--line)"; return; }
+  
+  const emailRegex = /^[a-zA-Z0-9._%+-]{3,}@[a-zA-Z0-9.-]{3,}\.[a-zA-Z]{2,}$/;
+  const domain = val.split('@')[1]?.toLowerCase();
+  const allowedDomains = ["gmail.com", "yahoo.com", "yahoo.co.in", "yahoo.in", "outlook.com", "hotmail.com", "icloud.com", "microsoft.com", "live.com", "me.com", "mac.com", "msn.com"];
+  
+  const isValidFormat = emailRegex.test(val) && !/(.)\1{4,}/i.test(val.split('@')[0]);
+  const isAllowedDomain = allowedDomains.includes(domain);
+  
+  if (!isValidFormat || !isAllowedDomain) {
+    errorSpan.textContent = !isAllowedDomain ? "Please use a valid provider (gmail, yahoo, outlook, etc)." : "Please enter a real email address.";
+    errorSpan.style.display = "block";
+    e.target.style.borderColor = "#d93025";
   } else {
+    errorSpan.style.display = "none";
+    e.target.style.borderColor = "var(--line)";
     e.target.value = val.toLowerCase();
   }
 });
