@@ -91,9 +91,16 @@ body {
   text-decoration: underline;
 }
 
-.legal-page .back-link {
-  display: inline-flex;
+.legal-page .nav-links {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 24px;
+}
+
+.legal-page .back-link,
+.legal-page .close-link {
+  display: inline-flex;
 }
 
 @media (max-width: 640px) {
