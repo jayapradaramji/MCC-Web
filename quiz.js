@@ -24,47 +24,47 @@ const sections = [
         key: "location",
         value: "",
         options: [
-          "Amaravati, Andhra Pradesh",
-          "Itanagar, Arunachal Pradesh",
-          "Guwahati, Assam",
-          "Patna, Bihar",
-          "Raipur, Chhattisgarh",
-          "Panaji, Goa",
-          "Ahmedabad, Gujarat",
-          "Gandhinagar, Gujarat",
-          "Chandigarh, Haryana",
-          "Shimla, Himachal Pradesh",
-          "Ranchi, Jharkhand",
-          "Bengaluru, Karnataka",
-          "Thiruvananthapuram, Kerala",
-          "Bhopal, Madhya Pradesh",
-          "Mumbai, Maharashtra",
-          "Imphal, Manipur",
-          "Shillong, Meghalaya",
-          "Aizawl, Mizoram",
-          "Kohima, Nagaland",
-          "Bhubaneswar, Odisha",
-          "Chandigarh, Punjab",
-          "Jaipur, Rajasthan",
-          "Gangtok, Sikkim",
-          "Chennai, Tamil Nadu",
-          "Hyderabad, Telangana",
           "Agartala, Tripura",
-          "Lucknow, Uttar Pradesh",
-          "Dehradun, Uttarakhand",
-          "Kolkata, West Bengal",
-          "Delhi NCR",
-          "Puducherry",
-          "Srinagar, Jammu and Kashmir",
-          "Jammu, Jammu and Kashmir",
-          "Leh, Ladakh",
-          "Port Blair, Andaman and Nicobar Islands",
-          "Kavaratti, Lakshadweep",
-          "Daman, Dadra and Nagar Haveli and Daman and Diu",
-          "Pune, Maharashtra",
+          "Ahmedabad, Gujarat",
+          "Aizawl, Mizoram",
+          "Amaravati, Andhra Pradesh",
+          "Bengaluru, Karnataka",
+          "Bhopal, Madhya Pradesh",
+          "Bhubaneswar, Odisha",
+          "Chandigarh, Haryana",
+          "Chandigarh, Punjab",
+          "Chennai, Tamil Nadu",
           "Coimbatore, Tamil Nadu",
+          "Daman, Dadra and Nagar Haveli and Daman and Diu",
+          "Dehradun, Uttarakhand",
+          "Delhi NCR",
+          "Gandhinagar, Gujarat",
+          "Gangtok, Sikkim",
+          "Guwahati, Assam",
+          "Hyderabad, Telangana",
+          "Imphal, Manipur",
+          "Itanagar, Arunachal Pradesh",
+          "Jaipur, Rajasthan",
+          "Jammu, Jammu and Kashmir",
+          "Kavaratti, Lakshadweep",
           "Kochi, Kerala",
+          "Kohima, Nagaland",
+          "Kolkata, West Bengal",
+          "Leh, Ladakh",
+          "Lucknow, Uttar Pradesh",
+          "Mumbai, Maharashtra",
           "Mysuru, Karnataka",
+          "Panaji, Goa",
+          "Patna, Bihar",
+          "Port Blair, Andaman and Nicobar Islands",
+          "Puducherry",
+          "Pune, Maharashtra",
+          "Raipur, Chhattisgarh",
+          "Ranchi, Jharkhand",
+          "Shillong, Meghalaya",
+          "Shimla, Himachal Pradesh",
+          "Srinagar, Jammu and Kashmir",
+          "Thiruvananthapuram, Kerala",
           "Visakhapatnam, Andhra Pradesh",
           "Others"
         ]
@@ -1686,9 +1686,20 @@ function saveUserDetails() {
 function showThankYouScreen() {
   const resultsScreen = document.querySelector("#resultsScreen");
   resultsScreen.innerHTML = `
-    <div class="result-hero" style="margin: auto 0; padding: 40px 20px;">
+    <div class="result-hero" style="margin: auto 0; padding: 40px 20px; text-align: center;">
       <h1 style="color:var(--leaf); margin-bottom:16px;">Assessment results downloaded.</h1>
       <p style="font-size:1.2rem; color:var(--muted);">Thank you for your participation.</p>
+    </div>
+    <div class="result-actions" style="margin-top: auto;">
+      <div class="icon-group">
+        <a class="icon-button" href="index.html" data-tooltip="Home page" aria-label="Home page">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+        </a>
+      </div>
+      <a href="index.html" class="nav-button next-button" style="text-decoration: none; text-align: center; justify-content: center;">Close</a>
     </div>
   `;
 }
@@ -1890,7 +1901,17 @@ backButton.addEventListener("click", goBack);
 continueButton.addEventListener("click", continueFromReward);
 document.querySelector("#startQuizButton").addEventListener("click", startQuiz);
 document.querySelector("#restartButton").addEventListener("click", restart);
-document.querySelector("#downloadButton").addEventListener("click", downloadScore);
+document.querySelector("#downloadButton").addEventListener("click", () => {
+  if (!isLoggedIn) {
+    actionAfterLogin = "downloadOnly";
+    screenBeforeLogin = "results";
+    document.querySelector("#saveUserDetailsButton").textContent = "Save & Download";
+    showOnly("login");
+  } else {
+    downloadScore();
+    showThankYouScreen();
+  }
+});
 document.querySelector("#downloadFromCelebrationButton").addEventListener("click", () => {
   celebrationModal.hidden = true;
   if (!isLoggedIn) {
