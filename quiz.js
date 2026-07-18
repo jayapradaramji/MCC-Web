@@ -115,7 +115,8 @@ const sections = [
           { value: "metro", label: "Metro", icon: "🚇", helper: "Urban rail." },
           { value: "bus", label: "Bus", icon: "🚌", helper: "Shared road transport." },
           { value: "walk", label: "Walk", icon: "🚶", helper: "No fuel footprint." },
-          { value: "cycle", label: "Cycle", icon: "🚲", helper: "Active mobility." }
+          { value: "cycle", label: "Cycle", icon: "🚲", helper: "Active mobility." },
+          { value: "none", label: "None", icon: "Ø", helper: "No commute." }
         ]
       },
       {
@@ -135,7 +136,7 @@ const sections = [
         type: "days",
         key: "travelDays",
         value: [],
-        options: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        options: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun", "None"]
       },
       {
         title: "Vehicle fuel type?",
@@ -434,7 +435,7 @@ const questions = sections.flatMap((section) => section.questions.map((question)
 // ===== EMISSION FACTORS (India-Specific) =====
 // Sources: CEA v20.0 (2024), India GHG Program, Shakti Foundation, CGIAR/FAO, DEFRA 2024, ICAO
 const factors = {
-  transport: { car: 0.171, auto: 0.040, bike: 0.070, metro: 0.035, bus: 0.015, walk: 0, cycle: 0 },  // kg CO₂/pax-km
+  transport: { car: 0.171, auto: 0.040, bike: 0.070, metro: 0.035, bus: 0.015, walk: 0, cycle: 0, none: 0 },  // kg CO₂/pax-km
   fuel: { petrol: 1, diesel: 1.16, ev: 0.20, hybrid: 0.65, cng: 0.75 },                 // multiplier vs petrol
   cooking: { lpg: 42.5, induction: 16.4, png: 30.0, mixed: 33.0 },                       // kg CO₂/month/household
   diet: { vegetarian: 21.6, vegan: 15.0, eggetarian: 27.0, nonveg: 51.6 },               // kg CO₂/month/person (CGIAR/FAO India)
@@ -494,7 +495,7 @@ function buildSectionPayload(sectionId) {
   for (const [questionKey, columnName] of Object.entries(mapping)) {
     let val = getValue(questionKey, "");
     if (Array.isArray(val)) val = val.join(", ");
-    if (questionKey === "travelDays" && Array.isArray(getValue("travelDays", []))) val = getValue("travelDays", []).length;
+    if (questionKey === "travelDays" && Array.isArray(getValue("travelDays", []))) val = getValue("travelDays", []).filter(d => d !== "none").length;
     data[columnName] = val;
   }
   // Add city/state from location on profile section
@@ -667,7 +668,10 @@ function renderChoice(question) {
 }
 
 function renderMulti(question) {
-  const options = question.type === "days" ? question.options.map((day) => ({ value: day, label: day, icon: day.slice(0, 1), helper: "Travel day" })) : question.options;
+  const options = question.type === "days" ? question.options.map((day) => {
+    if (day === "None") return { value: "none", label: "None", icon: "Ø", helper: "Work from home" };
+    return { value: day, label: day, icon: day.slice(0, 1), helper: "Travel day" };
+  }) : question.options;
   
   let html = options.map((option) => answerButton(question, option, true)).join("");
   
@@ -906,7 +910,7 @@ const greenPointConfig = {
     workplace: 50      // Corporate ESG participation (elevated — systemic impact)
   },
   weights: {
-    transport: { walk: 1.0, cycle: 0.9, metro: 0.7, bus: 0.5, auto: 0.4, bike: 0.3, car: 0.1 },
+    transport: { walk: 1.0, cycle: 0.9, metro: 0.7, bus: 0.5, auto: 0.4, bike: 0.3, car: 0.1, none: 1.0 },
     fuel: { ev: 1.0, cng: 0.8, hybrid: 0.6, petrol: 0.3, diesel: 0.1 },
     longTravel: { train: 1.0, bus: 0.7, car: 0.4, flight: 0.1 },
     cooking: { induction: 1.0, png: 0.8, mixed: 0.5, lpg: 0.3 },
@@ -932,7 +936,7 @@ function calculateMobilityScore() {
   score += (max * 0.2) * fWeight;
 
   const distance = Number(getValue("distance", 12));
-  const travelDays = getValue("travelDays", ["Mon", "Tue", "Wed"]).length;
+  const travelDays = getValue("travelDays", ["Mon", "Tue", "Wed"]).filter(d => d !== "none").length;
   const distanceImpact = Math.max(0, 1 - (distance * travelDays) / (50 * 7));
   score += (max * 0.2) * distanceImpact;
 
@@ -1284,7 +1288,7 @@ function calculate() {
   const transportMode = Array.isArray(transportArr) && transportArr.length
     ? transportArr.reduce((worst, t) => (factors.transport[t] || 0) > (factors.transport[worst] || 0) ? t : worst, transportArr[0])
     : "car";
-  const travelDays = getValue("travelDays", []).length;
+  const travelDays = getValue("travelDays", []).filter(d => d !== "none").length;
   const distance = Number(getValue("distance", 12));
   const fuel = getValue("fuel", "petrol");
   const commuteMode = transportMode === "cycle" ? "walk" : transportMode;
@@ -1404,7 +1408,7 @@ Respondent_Master: {
 
     Commute_Distance_km: getValue("distance", ""),
 
-    Travel_Days: getValue("travelDays", []).length,
+    Travel_Days: getValue("travelDays", []).filter(d => d !== "none").length,
 
     Fuel: getValue("fuel", ""),
 
