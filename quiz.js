@@ -148,7 +148,8 @@ const sections = [
           { value: "diesel", label: "Diesel", icon: "🛢", helper: "Higher tailpipe factor." },
           { value: "ev", label: "EV", icon: "⚡", helper: "Lower operating emissions." },
           { value: "hybrid", label: "Hybrid", icon: "🔋", helper: "Improved fuel efficiency." },
-          { value: "cng", label: "CNG", icon: "🌱", helper: "Lower fossil fuel estimate." }
+          { value: "cng", label: "CNG", icon: "🌱", helper: "Lower fossil fuel estimate." },
+          { value: "na", label: "Not Applicable", icon: "Ø", helper: "For walking/cycling." }
         ]
       },
       {
@@ -174,7 +175,8 @@ const sections = [
           { value: "train", label: "Train", icon: "🚆", helper: "Lower-carbon long-distance option." },
           { value: "bus", label: "Bus", icon: "🚌", helper: "Shared road trip." },
           { value: "flight", label: "Flight", icon: "✈", helper: "Fast but high impact." },
-          { value: "car", label: "Car", icon: "🚗", helper: "Road trip by car." }
+          { value: "car", label: "Car", icon: "🚗", helper: "Road trip by car." },
+          { value: "none", label: "Rarely Travel", icon: "🏡", helper: "I don't travel long distances." }
         ]
       },
       {
@@ -436,10 +438,10 @@ const questions = sections.flatMap((section) => section.questions.map((question)
 // Sources: CEA v20.0 (2024), India GHG Program, Shakti Foundation, CGIAR/FAO, DEFRA 2024, ICAO
 const factors = {
   transport: { car: 0.171, auto: 0.040, bike: 0.070, metro: 0.035, bus: 0.015, walk: 0, cycle: 0, none: 0 },  // kg CO₂/pax-km
-  fuel: { petrol: 1, diesel: 1.16, ev: 0.20, hybrid: 0.65, cng: 0.75 },                 // multiplier vs petrol
+  fuel: { petrol: 1, diesel: 1.16, ev: 0.20, hybrid: 0.65, cng: 0.75, na: 0 },                 // multiplier vs petrol
   cooking: { lpg: 42.5, induction: 16.4, png: 30.0, mixed: 33.0 },                       // kg CO₂/month/household
   diet: { vegetarian: 21.6, vegan: 15.0, eggetarian: 27.0, nonveg: 51.6 },               // kg CO₂/month/person (CGIAR/FAO India)
-  longTravel: { train: 7, bus: 12, flight: 115, car: 42 }                                 // kg CO₂ per trip one-way (ICAO, India Railways)
+  longTravel: { train: 7, bus: 12, flight: 115, car: 42, none: 0 }                                 // kg CO₂ per trip one-way (ICAO, India Railways)
 };
 
 // ===== CARBON CALCULATION CONSTANTS =====
@@ -933,6 +935,13 @@ function renderMulti(question) {
         selected.delete(val);
       } else {
         if (val === "none" || val === "others") {
+          if (val === "none" && question.key === "travelDays") {
+            const distanceQ = questions.find(q => q.key === "distance");
+            if (distanceQ && distanceQ.value !== "" && Number(distanceQ.value) !== 0) {
+              alert("You cannot select 'None' if your daily commute distance is not 0 km.");
+              return;
+            }
+          }
           selected.clear();
           selected.add(val);
         } else {
@@ -1145,8 +1154,8 @@ const greenPointConfig = {
   },
   weights: {
     transport: { walk: 1.0, cycle: 0.9, metro: 0.7, bus: 0.5, auto: 0.4, bike: 0.3, car: 0.1, none: 1.0 },
-    fuel: { ev: 1.0, cng: 0.8, hybrid: 0.6, petrol: 0.3, diesel: 0.1 },
-    longTravel: { train: 1.0, bus: 0.7, car: 0.4, flight: 0.1 },
+    fuel: { ev: 1.0, cng: 0.8, hybrid: 0.6, petrol: 0.3, diesel: 0.1, na: 1.0 },
+    longTravel: { train: 1.0, bus: 0.7, car: 0.4, flight: 0.1, none: 1.0 },
     cooking: { induction: 1.0, png: 0.8, mixed: 0.5, lpg: 0.3 },
     diet: { vegan: 1.0, vegetarian: 0.8, eggetarian: 0.6, nonveg: 0.2 },
     reusables: { bottle: 0.25, bag: 0.25, lunchbox: 0.25, cup: 0.25 },
