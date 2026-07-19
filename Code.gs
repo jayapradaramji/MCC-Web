@@ -23,6 +23,30 @@ const QUIZ_COL = {
   "Biggest_Challenge": 35, "Feature_Suggestions": 36, "Sustainable_Living_Definition": 37
 };
 
+const RESPONDENT_COL = {
+  "Response_ID": 1,
+  "Timestamp": 2,
+  "Name": 3,
+  "Email": 4,
+  "City": 5,
+  "State": 6,
+  "Occupation": 7,
+  "Age_Group": 8,
+  "Carbon_Score": 9,
+  "Monthly_CO2_kg": 10,
+  "Annual_CO2_t": 11,
+  "Green_Points": 12,
+  "Badge": 13,
+  "Quiz_Version": 14,
+  "Certificate_Generated": 15,
+  "Consent_Given": 16,
+  "Device_Type": 17,
+  "Browser": 18,
+  "Completion_Time_sec": 19,
+  "Quiz_Completed": 20,
+  "Source": 21
+};
+
 /* ── Find the row number for a Response_ID (always column 1) ── */
 function findRowByResponseId(sheet, responseId) {
   var lastRow = sheet.getLastRow();
@@ -32,6 +56,79 @@ function findRowByResponseId(sheet, responseId) {
     if (ids[i][0] === responseId) return i + 2;
   }
   return -1;
+}
+
+function rowToObject(values, columnMap) {
+  var data = {};
+  for (var key in columnMap) {
+    var value = values[columnMap[key] - 1];
+    data[key] = value === undefined || value === null ? "" : value;
+  }
+  return data;
+}
+
+function getSavedResponse(ss, responseId) {
+  var respondent = ss.getSheetByName("Respondent_Master");
+  var quiz = ss.getSheetByName("Quiz_Responses");
+  var respondentData = {};
+  var quizData = {};
+
+  var respRow = findRowByResponseId(respondent, responseId);
+  if (respRow !== -1) {
+    respondentData = rowToObject(
+      respondent.getRange(respRow, 1, 1, Math.max.apply(null, Object.values(RESPONDENT_COL))).getValues()[0],
+      RESPONDENT_COL
+    );
+  }
+
+  var quizRow = findRowByResponseId(quiz, responseId);
+  if (quizRow !== -1) {
+    quizData = rowToObject(
+      quiz.getRange(quizRow, 1, 1, Math.max.apply(null, Object.values(QUIZ_COL))).getValues()[0],
+      QUIZ_COL
+    );
+  }
+
+  if (respRow === -1 && quizRow === -1) {
+    return { status: "not_found", responseId: responseId };
+  }
+
+  return {
+    status: "success",
+    responseId: responseId,
+    Respondent_Master: respondentData,
+    Quiz_Responses: quizData
+  };
+}
+
+function jsonOutput(data, callback) {
+  var json = JSON.stringify(data);
+  var body = callback ? callback + "(" + json + ");" : json;
+  return ContentService
+    .createTextOutput(body)
+    .setMimeType(callback ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  var ss = SpreadsheetApp.openById("1RiREbKcfNxnehPmTtZX1n-0w7wCC7uFizgtDdVcTDQE");
+  var callback = e.parameter.callback || "";
+
+  try {
+    var action = e.parameter.action || "";
+    var responseId = e.parameter.Response_ID || e.parameter.responseId || "";
+
+    if (action !== "getResponse") {
+      return jsonOutput({ status: "error", message: "Unsupported action" }, callback);
+    }
+
+    if (!responseId) {
+      return jsonOutput({ status: "error", message: "Response_ID is required" }, callback);
+    }
+
+    return jsonOutput(getSavedResponse(ss, responseId), callback);
+  } catch (err) {
+    return jsonOutput({ status: "error", message: err.toString() }, callback);
+  }
 }
 
 /* ════════════════════════════════════════════════════
