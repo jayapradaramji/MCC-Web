@@ -700,6 +700,7 @@ let screenBeforeLogin = "landing";
 let actionAfterLogin = null;
 let walletPoints = 0;
 const awardedSections = new Set();
+let quizStartTime = null;
 
 function questionSnapshot() {
   return questions.map((question) => ({
@@ -1622,7 +1623,7 @@ Respondent_Master: {
 
     Browser: navigator.userAgent,
 
-    Completion_Time_sec: 0,
+    Completion_Time_sec: quizStartTime ? Math.round((Date.now() - quizStartTime) / 1000) : 0,
 
     Quiz_Completed: true,
 
@@ -2142,6 +2143,7 @@ function restart() {
 function startQuiz() {
   if (!responseId) resetResponseId();
   persistResponseId(responseId);
+  quizStartTime = Date.now();
   landingScreen.hidden = true;
   quizStage.hidden = false;
   rewardScreen.hidden = true;
