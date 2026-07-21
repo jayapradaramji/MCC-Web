@@ -316,6 +316,10 @@ function doPost(e) {
    DASHBOARD CALCULATOR
    ════════════════════════════════════════════════════ */
 function updateDashboard(ss) {
+  // Allow manual execution from Apps Script editor (ss won't be passed)
+  if (!ss) {
+    ss = SpreadsheetApp.openById("1RiREbKcfNxnehPmTtZX1n-0w7wCC7uFizgtDdVcTDQE");
+  }
   var dashboard = ss.getSheetByName("Dashboard_Data");
   var respondent = ss.getSheetByName("Respondent_Master");
   var quiz = ss.getSheetByName("Quiz_Responses");
