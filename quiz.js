@@ -259,7 +259,7 @@ const sections = [
         ]
       },
       { title: "Non-veg consumption frequency", help: "Select meals per week.", type: "range", key: "nonVegMeals", value: "", min: 0, max: 21, step: 1, suffix: " meals/week" },
-      { title: "Dairy consumption", help: "Fill the milk glass from empty to full.", type: "range", key: "dairy", value: "", min: 0, max: 100, step: 5, suffix: "%" },
+      { title: "Dairy consumption (daily)", help: "On a typical day, how much dairy do you consume? 0% = none, 100% = very high daily intake (e.g., multiple glasses of milk, curd, paneer).", type: "range", key: "dairy", value: "", min: 0, max: 100, step: 5, suffix: "%" },
       { title: "Food delivery frequency", help: "How many food packages arrive monthly?", type: "range", key: "deliveries", value: "", min: 0, max: 20, step: 1, suffix: " deliveries/month" },
       {
         title: "Reusable items",
@@ -281,7 +281,7 @@ const sections = [
     name: "Digital Lifestyle",
     badge: "Digital Minimalist Badge Unlocked",
     questions: [
-      { title: "Number of devices used", help: "Stack your daily digital devices.", type: "range", key: "deviceCount", value: "", min: 0, max: 10, step: 1, suffix: " devices" },
+      { title: "Number of devices you personally use", help: "Count all devices you personally own and use (e.g., phone, laptop, tablet). This is per person and remains consistent month to month — used to estimate your monthly digital carbon footprint.", type: "range", key: "deviceCount", value: "", min: 0, max: 10, step: 1, suffix: " devices" },
       {
         title: "Smart devices used",
         help: "Select the technology badges you use.",
