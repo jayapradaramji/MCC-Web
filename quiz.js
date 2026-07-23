@@ -186,7 +186,7 @@ const sections = [
         key: "flights",
         value: "",
         min: 0,
-        max: 20,
+        max: 50,
         step: 1,
         suffix: " flights"
       }
@@ -197,7 +197,7 @@ const sections = [
     name: "Home Energy",
     badge: "Energy Saver Badge Unlocked",
     questions: [
-      { title: "AC usage per day?", help: "Use the dial-like slider for summer usage.", type: "range", key: "acHours", value: "", min: 0, max: 12, step: 1, suffix: " hrs/day" },
+      { title: "AC usage per day?", help: "Use the dial-like slider for summer usage.", type: "range", key: "acHours", value: "", min: 0, max: 24, step: 1, suffix: " hrs/day" },
       {
         title: "Select appliances you use daily",
         help: "Selected items glow green.",
@@ -1187,7 +1187,7 @@ function calculateMobilityScore() {
   const longTravel = getValue("longTravel", "train");
   const ltWeight = greenPointConfig.weights.longTravel[longTravel] || 0.5;
   const flights = Number(getValue("flights", 1));
-  const flightImpact = Math.max(0, 1 - (flights / 10));
+  const flightImpact = Math.max(0, 1 - (flights / 50));
   score += (max * 0.1) * ltWeight;
   score += (max * 0.1) * flightImpact;
 
@@ -1199,7 +1199,7 @@ function calculateHomeEnergyScore() {
   let score = 0;
 
   const acHours = Number(getValue("acHours", 4));
-  score += (max * 0.3) * Math.max(0, 1 - (acHours / 12));
+  score += (max * 0.3) * Math.max(0, 1 - (acHours / 24));
 
   const deviceUsage = Number(getValue("deviceUsage", 60));
   score += (max * 0.2) * Math.max(0, 1 - (deviceUsage / 100));
