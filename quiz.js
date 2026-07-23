@@ -1157,19 +1157,19 @@ function renderNestedFlights(question) {
     </div>
   `;
 
-  answerArea.innerHTML = \`
+  answerArea.innerHTML = `
     <div class="nested-flights-container">
-      \${buildCard("personal", "Personal trip", "Flights taken for personal reasons.")}
-      \${buildCard("official", "Official trip", "Flights taken for work or business.")}
+      ${buildCard("personal", "Personal trip", "Flights taken for personal reasons.")}
+      ${buildCard("official", "Official trip", "Flights taken for work or business.")}
     </div>
-  \`;
+  `;
 
   // Attach Event Listeners
   answerArea.querySelectorAll('.cat-cb').forEach(cb => {
     cb.addEventListener('change', (e) => {
       const cat = e.target.dataset.category;
       val[cat].enabled = e.target.checked;
-      document.getElementById(\`\${cat}-options\`).style.display = val[cat].enabled ? 'block' : 'none';
+      document.getElementById(`${cat}-options`).style.display = val[cat].enabled ? 'block' : 'none';
       saveQuizState();
     });
   });
@@ -1179,7 +1179,7 @@ function renderNestedFlights(question) {
       const cat = e.target.dataset.category;
       const type = e.target.dataset.type;
       val[cat][type].enabled = e.target.checked;
-      document.getElementById(\`\${cat}-\${type}-slider\`).style.display = val[cat][type].enabled ? 'block' : 'none';
+      document.getElementById(`${cat}-${type}-slider`).style.display = val[cat][type].enabled ? 'block' : 'none';
       saveQuizState();
     });
   });
@@ -1189,7 +1189,7 @@ function renderNestedFlights(question) {
       const cat = e.target.dataset.category;
       const type = e.target.dataset.type;
       val[cat][type].value = Number(e.target.value);
-      e.target.parentElement.querySelector('.slider-val-readout').textContent = \`\${val[cat][type].value} flights\`;
+      e.target.parentElement.querySelector('.slider-val-readout').textContent = `${val[cat][type].value} flights`;
       saveQuizState();
     });
   });
