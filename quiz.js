@@ -1099,6 +1099,13 @@ function renderText(question) {
 function renderNestedFlights(question) {
   const val = question.value;
 
+  const getTotalFromSliders = () => {
+    return (val.personal.domestic.value || 0) + (val.personal.international.value || 0) +
+           (val.official.domestic.value || 0) + (val.official.international.value || 0);
+  };
+
+  const displayTotal = getTotalFromSliders();
+
   const buildCard = (category, title, desc) => `
     <div class="nested-flight-card" id="card-${category}">
       <label class="flight-top-label">
@@ -1159,6 +1166,10 @@ function renderNestedFlights(question) {
 
   answerArea.innerHTML = `
     <div class="nested-flights-container">
+      <div class="flight-total-input" style="margin-bottom: 20px;">
+        <label style="display: block; font-weight: bold; margin-bottom: 8px; color: var(--primary);">Total Flights</label>
+        <input type="number" id="manual-total-flights" value="${displayTotal}" readonly style="width: 100%; padding: 12px; border: 1.5px solid var(--line); border-radius: 8px; font-size: 1.1rem; background: var(--surface, #fcfbf7); cursor: not-allowed; color: var(--text);">
+      </div>
       ${buildCard("personal", "Personal trip", "Flights taken for personal reasons.")}
       ${buildCard("official", "Official trip", "Flights taken for work or business.")}
     </div>
@@ -1184,12 +1195,17 @@ function renderNestedFlights(question) {
     });
   });
 
+  const manualInput = document.getElementById('manual-total-flights');
+
   answerArea.querySelectorAll('.flight-range').forEach(range => {
     range.addEventListener('input', (e) => {
       const cat = e.target.dataset.category;
       const type = e.target.dataset.type;
       val[cat][type].value = Number(e.target.value);
       e.target.parentElement.querySelector('.slider-val-readout').textContent = `${val[cat][type].value} flights`;
+      
+      manualInput.value = getTotalFromSliders();
+      
       saveQuizState();
     });
   });
@@ -1651,9 +1667,12 @@ function calculate() {
   const EMISSION_DOMESTIC_FLIGHT = 115; 
   const EMISSION_INTERNATIONAL_FLIGHT = 550; 
   const flightsObj = getValue("flights", { personal: { domestic: { value: 0 }, international: { value: 0 } }, official: { domestic: { value: 0 }, international: { value: 0 } } });
+  
   let totalDomestic = (flightsObj.personal?.domestic?.value || 0) + (flightsObj.official?.domestic?.value || 0);
   let totalInternational = (flightsObj.personal?.international?.value || 0) + (flightsObj.official?.international?.value || 0);
-  const travel = (totalDomestic * EMISSION_DOMESTIC_FLIGHT + totalInternational * EMISSION_INTERNATIONAL_FLIGHT) / 12 + factors.longTravel[getValue("longTravel", "train")];
+  let travelFlightsEmission = (totalDomestic * EMISSION_DOMESTIC_FLIGHT + totalInternational * EMISSION_INTERNATIONAL_FLIGHT);
+  
+  const travel = travelFlightsEmission / 12 + factors.longTravel[getValue("longTravel", "train")];
   const total = commute + home + food + digital + travel;
   return {
     total,
