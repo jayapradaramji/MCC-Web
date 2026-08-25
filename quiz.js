@@ -315,7 +315,9 @@ const sections = [
           { value: "time", label: "Time", icon: "⏳", helper: "Hard to fit into routine." },
           { value: "cost", label: "Cost", icon: "💰", helper: "Feels expensive." },
           { value: "awareness", label: "Awareness", icon: "📉", helper: "Need clearer information." },
-          { value: "access", label: "Accessibility", icon: "🚫", helper: "Options are not easy to access." }
+          { value: "access", label: "Accessibility", icon: "🚫", helper: "Options are not easy to access." },
+          { value: "none", label: "None of these", icon: "🌱", helper: "I don't currently face these barriers." },
+          { value: "notInterested", label: "Not currently interested", icon: "🙅", helper: "Sustainability is not a current priority for me." }
         ]
       },
       {
@@ -940,7 +942,7 @@ function renderMulti(question) {
       if (selected.has(val)) {
         selected.delete(val);
       } else {
-        if (val === "none" || val === "others") {
+        if (val === "none" || val === "others" || val === "notInterested") {
           if (val === "none" && question.key === "travelDays") {
             const distanceQ = questions.find(q => q.key === "distance");
             if (distanceQ && distanceQ.value !== "" && Number(distanceQ.value) !== 0) {
@@ -953,6 +955,7 @@ function renderMulti(question) {
         } else {
           selected.delete("none");
           selected.delete("others");
+          selected.delete("notInterested");
           selected.add(val);
         }
       }
