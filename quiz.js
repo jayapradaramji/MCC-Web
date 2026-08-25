@@ -1479,7 +1479,7 @@ function calculateKnowledgeScore(sectionId) {
     return Math.min(awarenessConfig.maxPoints.home, homeTech.length * 2.5); // All 4 techs = full 10 pts
   }
   if (sectionId === "food") {
-    const reusables = getValue("reusables", []).filter(item =>> item !== "none");
+    const reusables = getValue("reusables", []).filter(item => item !== "none");
     const diet = getValue("diet", "vegetarian");
     if (diet === "vegan" || diet === "vegetarian") score += 5;
     score += Math.min(5, reusables.length * 1.25); // All 4 reusables = full 5 pts (none excluded)
