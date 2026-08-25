@@ -262,7 +262,7 @@ const sections = [
       { title: "Food delivery frequency", help: "How many food packages arrive monthly?", type: "range", key: "deliveries", value: "", min: 0, max: 20, step: 1, suffix: " deliveries/month" },
       {
         title: "Reusable items",
-        help: "Each click fills a green habit heart. · Select all that apply.",
+        help: "Each click fills a green habit heart.",
         type: "multi",
         key: "reusables",
         value: [],
@@ -775,7 +775,7 @@ function sectionFor(id) {
 }
 
 function isQuestionVisible(question) {
-  if (question.key === "nonVegMeals") return getValue("diet", "") === "nonveg";
+  if (question.key === "nonVegMeals") return getValue("diet", "") === "nonveg" || getValue("diet", "") === "eggetarian";
   if (question.key === "dairy") return getValue("diet", "") !== "vegan";
   if (question.key === "metroAccess") return getValue("transport", []).includes("metro");
   return true;
